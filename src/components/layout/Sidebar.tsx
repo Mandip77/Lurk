@@ -20,8 +20,8 @@ export function Sidebar() {
     <aside className="w-56 shrink-0 bg-slate-950 border-r border-slate-800 flex flex-col">
       <div className="p-4 border-b border-slate-800">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <span className="text-xl">🛡️</span>
-          <span className="font-bold text-white text-sm">Sentinel AI</span>
+          <span className="text-xl">👁️</span>
+          <span className="font-bold text-white text-sm">Lurk</span>
         </Link>
       </div>
 

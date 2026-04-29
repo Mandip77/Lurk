@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Sentinel AI — Security scanning for AI-generated code',
+  title: 'Lurk — Security scanning for AI-generated code',
   description: 'Automatically scan every pull request for security vulnerabilities introduced by AI-generated code.',
 }
 

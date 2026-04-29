@@ -54,29 +54,45 @@ export async function POST(req: NextRequest) {
   }
 
   const user = repo.users
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinelai.dev'
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lurk.dev'
 
-  // Check free tier quota
+  // Idempotency: skip if a scan for this PR was created in the last 30 seconds
+  const { data: recentScan } = await supabase
+    .from('scans')
+    .select('id, created_at')
+    .eq('repository_id', repo.id)
+    .eq('pr_number', pr.number)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (recentScan) {
+    const age = Date.now() - new Date(recentScan.created_at).getTime()
+    if (age < 30_000) {
+      return NextResponse.json({ ok: true, scanId: recentScan.id, reason: 'duplicate' })
+    }
+  }
+
+  // Quota check — atomic via RPC to avoid race condition
   if (user.tier === 'free') {
     const thisMonth = new Date()
     thisMonth.setDate(1)
     const monthStr = thisMonth.toISOString().split('T')[0]
 
-    const { data: usage } = await supabase
-      .from('scan_usage')
-      .select('scan_count')
-      .eq('user_id', user.id)
-      .eq('month', monthStr)
-      .single()
+    const { data: quotaResult } = await supabase.rpc('check_quota', {
+      p_user_id: user.id,
+      p_month: monthStr,
+      p_limit: 3,
+    })
 
-    if ((usage?.scan_count ?? 0) >= 3) {
+    if (!quotaResult) {
       const octokit = await getInstallationOctokit(repo.installation_id)
       const [owner, repoName] = repoFullName.split('/')
       await octokit.rest.issues.createComment({
         owner,
         repo: repoName,
         issue_number: pr.number,
-        body: `## 🛡️ Sentinel AI\n\nYou've used all 3 free scans this month.\n\n[Upgrade to Pro →](${appUrl}/pricing) for unlimited scanning.`,
+        body: `## 👁️ Lurk\n\nYou've used all 3 free scans this month.\n\n[Upgrade to Pro →](${appUrl}/pricing) for unlimited scanning.`,
       })
       return NextResponse.json({ ok: true, reason: 'quota_exceeded' })
     }
@@ -108,7 +124,7 @@ export async function POST(req: NextRequest) {
       owner,
       repo: repoName,
       issue_number: pr.number,
-      body: `## 🛡️ Sentinel AI\n\n🔍 Scanning this PR for AI-generated code vulnerabilities...`,
+      body: `## 🛡️ Lurk\n\n🔍 Scanning this PR for AI-generated code vulnerabilities...`,
     })
   } catch {
     // Non-fatal — continue even if comment fails

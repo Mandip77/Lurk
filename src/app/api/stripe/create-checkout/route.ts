@@ -8,7 +8,19 @@ export async function POST(req: NextRequest) {
 
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { priceId } = await req.json()
+  const body = await req.json()
+  const { priceId } = body
+
+  // Validate priceId against known env-configured prices — prevents price manipulation
+  const validPriceIds = [
+    process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
+    process.env.NEXT_PUBLIC_STRIPE_AGENCY_PRICE_ID,
+  ].filter(Boolean)
+
+  if (!priceId || !validPriceIds.includes(priceId)) {
+    return NextResponse.json({ error: 'Invalid price' }, { status: 400 })
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
   const { data: profile } = await supabase.from('users').select('stripe_customer_id').eq('id', user.id).single()

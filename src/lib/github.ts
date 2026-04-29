@@ -99,7 +99,7 @@ export function formatScanComment(
 
   const severityIcon = (s: string) => s === 'critical' ? '🔴' : s === 'high' ? '🟠' : s === 'medium' ? '🟡' : s === 'low' ? '🔵' : 'ℹ️'
 
-  let comment = `## 🛡️ Sentinel AI Security Scan\n\n`
+  let comment = `## 🛡️ Lurk Security Scan\n\n`
   comment += `**Status:** ${statusEmoji} ${statusLabel} | **Severity Score:** ${severityScore}/100\n\n`
 
   if (findings.length === 0) {
@@ -126,6 +126,6 @@ export function formatScanComment(
     }
   }
 
-  comment += `---\n*Powered by [Sentinel AI](${appUrl}) · [View full report](${appUrl}/scans/${scanId})*`
+  comment += `---\n*Powered by [Lurk](${appUrl}) · [View full report](${appUrl}/scans/${scanId})*`
   return comment
 }

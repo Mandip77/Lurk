@@ -40,6 +40,7 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
       .from('scans')
       .select('*, repositories(*)')
       .eq('id', id)
+      .eq('user_id', user.id) // ownership check — prevents IDOR
       .single(),
     supabase.from('users').select('tier').eq('id', user.id).single(),
   ])
@@ -50,6 +51,7 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
     .from('findings')
     .select('*')
     .eq('scan_id', id)
+    .eq('user_id', user.id) // ownership check on findings too
     .order('severity', { ascending: true })
 
   const userTier = profile?.tier ?? 'free'

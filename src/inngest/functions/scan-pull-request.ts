@@ -72,7 +72,7 @@ function buildPRComment(
   const statusText = score === 0 ? 'PASSED' : score < 25 ? 'LOW RISK' : score < 50 ? 'MEDIUM RISK' : score >= 75 ? 'CRITICAL' : 'HIGH RISK'
   const showFixes = userTier !== 'free'
 
-  let comment = `## 🛡️ Sentinel AI Security Scan\n\n`
+  let comment = `## 🛡️ Lurk Security Scan\n\n`
   comment += `**Status**: ${statusEmoji} ${statusText} &nbsp;&nbsp; **Score**: ${score}/100 &nbsp;&nbsp; **Findings**: ${findings.length}\n\n`
   comment += `---\n\n`
 
@@ -101,7 +101,7 @@ function buildPRComment(
     }
   }
 
-  comment += `[View full report](${appUrl}/scans/${scanId}) · Powered by [Sentinel AI](${appUrl})`
+  comment += `[View full report](${appUrl}/scans/${scanId}) · Powered by [Lurk](${appUrl})`
   return comment
 }
 
@@ -195,7 +195,7 @@ export const scanPullRequest = inngest.createFunction(
       const repo = scan.repositories
       if (!repo.installation_id || !scan.pr_number) return
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinelai.dev'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lurk.dev'
       const comment = buildPRComment(findings, scanId, scan.users.tier, appUrl)
 
       const octokit = await getInstallationOctokit(repo.installation_id)
@@ -210,7 +210,7 @@ export const scanPullRequest = inngest.createFunction(
 
     await step.run('send-email', async () => {
       const user = scan.users
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinelai.dev'
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lurk.dev'
       await sendScanCompleteEmail({
         to: user.email,
         name: user.full_name,

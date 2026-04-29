@@ -39,8 +39,8 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="text-4xl mb-2">🛡️</div>
-          <h1 className="text-2xl font-bold text-white">Sentinel AI</h1>
+          <div className="text-4xl mb-2">👁️</div>
+          <h1 className="text-2xl font-bold text-white">Lurk</h1>
           <p className="text-slate-400 mt-1">Security scanning for AI-generated code</p>
         </div>
 

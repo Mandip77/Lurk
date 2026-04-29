@@ -24,12 +24,12 @@ export async function sendScanCompleteEmail({
   const statusLabel = severityScore >= 75 ? 'CRITICAL' : severityScore >= 50 ? 'HIGH RISK' : severityScore >= 25 ? 'MEDIUM RISK' : 'PASSED'
 
   return getResend().emails.send({
-    from: 'Sentinel AI <security@sentinelai.dev>',
+    from: 'Lurk <security@lurk.dev>',
     to,
     subject: `[${statusLabel}] Security scan complete for ${repoName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0B1120;">🛡️ Sentinel AI — Scan Complete</h2>
+        <h2 style="color: #0B1120;">🛡️ Lurk — Scan Complete</h2>
         <p>Hi ${name ?? 'there'},</p>
         <p>Your security scan for <strong>${repoName}</strong> is complete.</p>
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -47,7 +47,7 @@ export async function sendScanCompleteEmail({
           </tr>
         </table>
         <a href="${scanUrl}" style="background: #00FF94; color: #0B1120; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Full Report</a>
-        <p style="margin-top: 32px; color: #64748b; font-size: 12px;">Sentinel AI — Security scanning for AI-generated code</p>
+        <p style="margin-top: 32px; color: #64748b; font-size: 12px;">Lurk — Security scanning for AI-generated code</p>
       </div>
     `,
   })

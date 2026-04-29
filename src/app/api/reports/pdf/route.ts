@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
       {
         error: 'PDF generation via WeasyPrint requires a self-hosted deployment.',
         hint: 'Use the /reports/[slug] web page — it has a "Print / Save PDF" button that produces identical output.',
-        docs: 'https://github.com/your-org/sentinel-ai#pdf-generation',
+        docs: 'https://github.com/your-org/lurk#pdf-generation',
       },
       { status: 501 }
     )
@@ -137,7 +137,8 @@ export async function GET(req: NextRequest) {
         { status: 500 }
       )
     }
-    return NextResponse.json({ error: 'PDF generation failed', detail: msg }, { status: 500 })
+    console.error('[pdf-gen] unhandled error:', msg)
+    return NextResponse.json({ error: 'PDF generation failed' }, { status: 500 })
   } finally {
     // Clean up temp files
     await unlink(dataPath).catch(() => {})

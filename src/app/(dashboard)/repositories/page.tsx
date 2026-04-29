@@ -14,6 +14,7 @@ export default async function RepositoriesPage() {
     .select('*')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+    .limit(100)
 
   const installUrl = process.env.NEXT_PUBLIC_GITHUB_APP_INSTALL_URL ?? '#'
 
@@ -33,7 +34,7 @@ export default async function RepositoriesPage() {
         <Card className="bg-slate-900 border-slate-800 p-12 text-center">
           <div className="text-4xl mb-4">📁</div>
           <h2 className="text-white font-semibold text-lg">No repositories connected</h2>
-          <p className="text-slate-400 mt-2 mb-6">Install the Sentinel AI GitHub App to start scanning pull requests automatically.</p>
+          <p className="text-slate-400 mt-2 mb-6">Install the Lurk GitHub App to start scanning pull requests automatically.</p>
           <LinkButton href={installUrl} target="_blank" rel="noreferrer" className="bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium">
             Install GitHub App
           </LinkButton>
