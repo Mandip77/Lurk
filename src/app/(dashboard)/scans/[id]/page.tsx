@@ -4,19 +4,16 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SeverityBadge } from '@/components/dashboard/SeverityBadge'
+import { GenerateReportButton } from '@/components/dashboard/GenerateReportButton'
 import type { Finding, FindingSeverity } from '@/types'
 
 function ScoreGauge({ score }: { score: number }) {
   const color = score >= 75 ? '#ef4444' : score >= 50 ? '#f97316' : score >= 25 ? '#eab308' : '#00FF94'
   const label = score >= 75 ? 'CRITICAL' : score >= 50 ? 'HIGH RISK' : score >= 25 ? 'MEDIUM RISK' : score > 0 ? 'LOW RISK' : 'PASSED'
-
   return (
     <div className="flex flex-col items-center">
-      <div
-        className="w-24 h-24 rounded-full border-8 flex items-center justify-center"
-        style={{ borderColor: color }}
-      >
-        <span className="text-2xl font-bold" style={{ color }}>{score}</span>
+      <div className="w-24 h-24 rounded-full border-8 flex items-center justify-center" style={{ borderColor: color }}>
+        <span className="text-2xl font-bold font-mono" style={{ color }}>{score}</span>
       </div>
       <span className="text-sm font-medium mt-2" style={{ color }}>{label}</span>
     </div>
@@ -38,11 +35,14 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: scan } = await supabase
-    .from('scans')
-    .select('*, repositories(*, users(tier))')
-    .eq('id', id)
-    .single()
+  const [{ data: scan }, { data: profile }] = await Promise.all([
+    supabase
+      .from('scans')
+      .select('*, repositories(*)')
+      .eq('id', id)
+      .single(),
+    supabase.from('users').select('tier').eq('id', user.id).single(),
+  ])
 
   if (!scan) notFound()
 
@@ -52,7 +52,7 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
     .eq('scan_id', id)
     .order('severity', { ascending: true })
 
-  const userTier = scan.repositories?.users?.tier ?? 'free'
+  const userTier = profile?.tier ?? 'free'
 
   const bySeverity = (findings ?? []).reduce((acc: Record<string, number>, f: Finding) => {
     acc[f.severity] = (acc[f.severity] ?? 0) + 1
@@ -65,15 +65,16 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
         <Link href="/scans" className="text-slate-400 hover:text-white text-sm">← Back to Scans</Link>
       </div>
 
-      <div className="flex items-start gap-6">
+      <div className="flex items-start gap-6 flex-wrap">
         <ScoreGauge score={scan.severity_score} />
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-xl font-bold text-white">{scan.pr_title ?? `PR #${scan.pr_number}`}</h1>
           <p className="text-slate-400 mt-1">{scan.repositories?.full_name}</p>
-          <div className="flex items-center gap-4 mt-3 text-sm text-slate-400">
+          <div className="flex items-center gap-4 mt-3 text-sm text-slate-400 flex-wrap">
             <span>by {scan.pr_author}</span>
             <span>·</span>
             <span>{new Date(scan.created_at).toLocaleDateString()}</span>
+            {scan.model_used && <span>· {scan.model_used}</span>}
             {scan.pr_url && (
               <>
                 <span>·</span>
@@ -82,6 +83,9 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
             )}
           </div>
         </div>
+        {userTier === 'agency' && (
+          <GenerateReportButton scanId={id} />
+        )}
       </div>
 
       <div className="grid grid-cols-5 gap-2">

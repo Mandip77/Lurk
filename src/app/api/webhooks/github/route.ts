@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
-import { verifyGitHubSignature, getInstallationOctokit, postPRComment } from '@/lib/github'
+import { createHmac, timingSafeEqual } from 'crypto'
+import { createServiceClient } from '@/lib/supabase/service'
+import { getInstallationOctokit } from '@/lib/github'
 import { inngest } from '@/inngest/client'
 
 export async function POST(req: NextRequest) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-  const payload = await req.text()
+  const body = await req.text()
   const signature = req.headers.get('x-hub-signature-256') ?? ''
   const event = req.headers.get('x-github-event') ?? ''
 
@@ -16,20 +13,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  let body: Record<string, unknown>
+  let payload: Record<string, unknown>
   try {
-    body = JSON.parse(payload)
+    payload = JSON.parse(body)
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const action = body.action as string
+  const action = payload.action as string
   if (!['opened', 'synchronize', 'reopened'].includes(action)) {
     return NextResponse.json({ ok: true })
   }
 
-  const repoFullName = (body.repository as { full_name: string }).full_name
-  const pr = body.pull_request as {
+  const supabase = createServiceClient()
+  const repoFullName = (payload.repository as { full_name: string }).full_name
+  const pr = payload.pull_request as {
     number: number
     title: string
     user: { login: string }
@@ -43,44 +41,52 @@ export async function POST(req: NextRequest) {
     .eq('is_active', true)
     .single()
 
-  if (!repo) {
-    return NextResponse.json({ error: 'Repo not found' }, { status: 404 })
-  }
+  if (!repo) return NextResponse.json({ ok: true })
 
-  if (!verifyGitHubSignature(payload, signature, repo.webhook_secret ?? '')) {
-    return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+  // Verify HMAC using this repo's per-webhook secret
+  const expected = 'sha256=' + createHmac('sha256', repo.webhook_secret).update(body).digest('hex')
+  try {
+    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+      return new NextResponse('Unauthorized', { status: 401 })
+    }
+  } catch {
+    return new NextResponse('Unauthorized', { status: 401 })
   }
 
   const user = repo.users
-  const thisMonth = new Date()
-  thisMonth.setDate(1)
-  const monthStr = thisMonth.toISOString().split('T')[0]
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinelai.dev'
 
-  const { data: usage } = await supabase
-    .from('scan_usage')
-    .select('scan_count')
-    .eq('user_id', user.id)
-    .eq('month', monthStr)
-    .single()
+  // Check free tier quota
+  if (user.tier === 'free') {
+    const thisMonth = new Date()
+    thisMonth.setDate(1)
+    const monthStr = thisMonth.toISOString().split('T')[0]
 
-  if (user.tier === 'free' && (usage?.scan_count ?? 0) >= 3) {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://sentinelai.dev'
-    const octokit = await getInstallationOctokit(repo.installation_id)
-    const [owner, repoName] = repoFullName.split('/')
-    await postPRComment(
-      octokit,
-      owner,
-      repoName,
-      pr.number,
-      `## 🛡️ Sentinel AI\n\nYou've reached your free tier limit of **3 scans per month**.\n\n[Upgrade to Pro](${appUrl}/pricing) to get unlimited scans, fix suggestions, and more.`
-    )
-    return NextResponse.json({ ok: true, reason: 'quota_exceeded' })
+    const { data: usage } = await supabase
+      .from('scan_usage')
+      .select('scan_count')
+      .eq('user_id', user.id)
+      .eq('month', monthStr)
+      .single()
+
+    if ((usage?.scan_count ?? 0) >= 3) {
+      const octokit = await getInstallationOctokit(repo.installation_id)
+      const [owner, repoName] = repoFullName.split('/')
+      await octokit.rest.issues.createComment({
+        owner,
+        repo: repoName,
+        issue_number: pr.number,
+        body: `## 🛡️ Sentinel AI\n\nYou've used all 3 free scans this month.\n\n[Upgrade to Pro →](${appUrl}/pricing) for unlimited scanning.`,
+      })
+      return NextResponse.json({ ok: true, reason: 'quota_exceeded' })
+    }
   }
 
   const { data: scan, error: scanError } = await supabase
     .from('scans')
     .insert({
       repository_id: repo.id,
+      user_id: user.id,
       pr_number: pr.number,
       pr_title: pr.title,
       pr_author: pr.user.login,
@@ -94,20 +100,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create scan' }, { status: 500 })
   }
 
-  await inngest.send({
-    name: 'scan/requested',
-    data: { scanId: scan.id },
-  })
+  // Post "scanning" comment immediately
+  try {
+    const octokit = await getInstallationOctokit(repo.installation_id)
+    const [owner, repoName] = repoFullName.split('/')
+    await octokit.rest.issues.createComment({
+      owner,
+      repo: repoName,
+      issue_number: pr.number,
+      body: `## 🛡️ Sentinel AI\n\n🔍 Scanning this PR for AI-generated code vulnerabilities...`,
+    })
+  } catch {
+    // Non-fatal — continue even if comment fails
+  }
 
-  const octokit = await getInstallationOctokit(repo.installation_id)
-  const [owner, repoName] = repoFullName.split('/')
-  await postPRComment(
-    octokit,
-    owner,
-    repoName,
-    pr.number,
-    `## 🔍 Sentinel AI\n\nScanning this PR for security vulnerabilities... Results will appear here shortly.`
-  )
+  await inngest.send({ name: 'scan/requested', data: { scanId: scan.id } })
 
   return NextResponse.json({ ok: true, scanId: scan.id })
 }

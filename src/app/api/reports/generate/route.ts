@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createClient as createServiceClient } from '@supabase/supabase-js'
+import { createServiceClient } from '@/lib/supabase/service'
 
 export async function POST(req: NextRequest) {
-  const serviceSupabase = createServiceClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -18,98 +14,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Agency tier required' }, { status: 403 })
   }
 
-  const { scan_id, client_name, agency_name, agency_logo_url } = await req.json()
+  const { scan_id, client_name, agency_name, agency_logo_url, is_public } = await req.json()
+
+  const serviceClient = createServiceClient()
 
   const { data: scan } = await supabase
     .from('scans')
-    .select('*, findings(*), repositories(full_name)')
+    .select('id, repository_id')
     .eq('id', scan_id)
     .single()
 
   if (!scan) return NextResponse.json({ error: 'Scan not found' }, { status: 404 })
 
-  // Dynamic import to avoid server-side issues
-  const { renderToBuffer, Document, Page, Text, View, StyleSheet } = await import('@react-pdf/renderer')
-  const React = (await import('react')).default
+  const { data: report, error } = await serviceClient
+    .from('reports')
+    .insert({
+      user_id: user.id,
+      scan_id,
+      client_name,
+      agency_name,
+      agency_logo_url,
+      is_public: is_public ?? false,
+    })
+    .select()
+    .single()
 
-  const styles = StyleSheet.create({
-    page: { padding: 40, fontFamily: 'Helvetica' },
-    title: { fontSize: 28, fontWeight: 'bold', marginBottom: 8 },
-    subtitle: { fontSize: 14, color: '#64748b', marginBottom: 40 },
-    sectionTitle: { fontSize: 16, fontWeight: 'bold', marginTop: 24, marginBottom: 8, borderBottom: '1 solid #e2e8f0', paddingBottom: 4 },
-    row: { flexDirection: 'row', marginBottom: 4 },
-    label: { width: 120, fontSize: 10, color: '#64748b' },
-    value: { fontSize: 10 },
-    finding: { marginBottom: 16, padding: 12, backgroundColor: '#f8fafc', borderRadius: 4 },
-    findingTitle: { fontSize: 12, fontWeight: 'bold', marginBottom: 4 },
-    findingMeta: { fontSize: 9, color: '#64748b', marginBottom: 4 },
-    findingDesc: { fontSize: 10, marginBottom: 4 },
-    code: { fontSize: 8, fontFamily: 'Courier', backgroundColor: '#1e293b', color: '#00FF94', padding: 8, borderRadius: 4 },
-    footer: { position: 'absolute', bottom: 20, left: 40, right: 40, fontSize: 8, color: '#94a3b8', textAlign: 'center' },
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+
+  return NextResponse.json({
+    report_id: report.id,
+    slug: report.slug,
+    report_url: `${appUrl}/reports/${report.slug}`,
   })
-
-  const severityColor = (s: string) => s === 'critical' ? '#ef4444' : s === 'high' ? '#f97316' : s === 'medium' ? '#eab308' : s === 'low' ? '#3b82f6' : '#64748b'
-
-  const pdfDoc = React.createElement(Document, null,
-    React.createElement(Page, { size: 'A4', style: styles.page },
-      React.createElement(View, null,
-        React.createElement(Text, { style: styles.title }, 'Security Audit Report'),
-        React.createElement(Text, { style: styles.subtitle }, `${agency_name} for ${client_name}`),
-        React.createElement(Text, { style: styles.sectionTitle }, 'Executive Summary'),
-        React.createElement(View, { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Repository:'),
-          React.createElement(Text, { style: styles.value }, scan.repositories?.full_name ?? '')
-        ),
-        React.createElement(View, { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Severity Score:'),
-          React.createElement(Text, { style: styles.value }, `${scan.severity_score}/100`)
-        ),
-        React.createElement(View, { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Total Findings:'),
-          React.createElement(Text, { style: styles.value }, String(scan.findings?.length ?? 0))
-        ),
-        React.createElement(View, { style: styles.row },
-          React.createElement(Text, { style: styles.label }, 'Scan Date:'),
-          React.createElement(Text, { style: styles.value }, new Date(scan.created_at).toLocaleDateString())
-        ),
-        React.createElement(Text, { style: styles.sectionTitle }, 'Detailed Findings'),
-        ...(scan.findings ?? []).map((f: { severity: string; title: string; file_path?: string; description?: string; code_snippet?: string; fix_suggestion?: string }) =>
-          React.createElement(View, { key: f.title, style: styles.finding },
-            React.createElement(Text, { style: { ...styles.findingTitle, color: severityColor(f.severity) } }, `${f.severity.toUpperCase()} — ${f.title}`),
-            f.file_path && React.createElement(Text, { style: styles.findingMeta }, `File: ${f.file_path}`),
-            f.description && React.createElement(Text, { style: styles.findingDesc }, f.description),
-            f.code_snippet && React.createElement(Text, { style: styles.code }, f.code_snippet),
-            f.fix_suggestion && React.createElement(Text, { style: { ...styles.findingDesc, marginTop: 4 } }, `Fix: ${f.fix_suggestion}`)
-          )
-        ),
-        React.createElement(Text, { style: styles.footer }, `This report was generated by Sentinel AI's automated security scanning platform · ${agency_name}`)
-      )
-    )
-  )
-
-  const pdfBuffer = await renderToBuffer(pdfDoc)
-  const fileName = `reports/${user.id}/${scan_id}-${Date.now()}.pdf`
-
-  const { error: uploadError } = await serviceSupabase.storage
-    .from('reports')
-    .upload(fileName, pdfBuffer, { contentType: 'application/pdf' })
-
-  if (uploadError) return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
-
-  const { data: signedUrlData } = await serviceSupabase.storage
-    .from('reports')
-    .createSignedUrl(fileName, 60 * 60 * 24 * 7)
-
-  const signedUrl = signedUrlData?.signedUrl ?? null
-
-  const { data: report } = await serviceSupabase.from('reports').insert({
-    user_id: user.id,
-    scan_id,
-    client_name,
-    agency_name,
-    agency_logo_url,
-    pdf_url: signedUrl,
-  }).select().single()
-
-  return NextResponse.json({ pdf_url: signedUrl, report_id: report?.id })
 }
