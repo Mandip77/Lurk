@@ -58,9 +58,14 @@ export default async function PublicReportPage({ params }: { params: Promise<{ s
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; color: black !important; }
+          /* Keep dark theme for WeasyPrint; flip to white for browser print */
+          @media not all and (color-gamut: p3) {
+            body { background: #0B1120 !important; }
+          }
           .print-break { page-break-before: always; }
+          pre { white-space: pre-wrap !important; word-break: break-word !important; }
         }
+        @page { size: A4; margin: 1.5cm; }
       `}</style>
 
       <div className="min-h-screen bg-[#0B1120] text-white">
@@ -83,12 +88,24 @@ export default async function PublicReportPage({ params }: { params: Promise<{ s
                 )}
               </div>
             </div>
-            <button
-              onClick={() => window.print()}
-              className="no-print bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              🖨️ Print / Save PDF
-            </button>
+            <div className="no-print flex items-center gap-2">
+              {/* Self-hosted only: WeasyPrint PDF download */}
+              {process.env.VERCEL !== '1' && (
+                <a
+                  href={`/api/reports/pdf?slug=${slug}`}
+                  className="bg-[#00FF94] text-black px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#00DD80] transition-colors"
+                  download
+                >
+                  ⬇️ Download PDF
+                </a>
+              )}
+              <button
+                onClick={() => window.print()}
+                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                🖨️ Print / Save PDF
+              </button>
+            </div>
           </div>
         </div>
 
