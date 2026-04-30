@@ -42,8 +42,10 @@ export async function scanCodeWithClaude(diff: string): Promise<{
   findings: ClaudeFinding[]
   tokensUsed: number
 }> {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set')
   const { default: Anthropic } = await import('@anthropic-ai/sdk')
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+  const anthropic = new Anthropic({ apiKey })
 
   const response = await anthropic.messages.create({
     model: 'claude-haiku-4-5',
