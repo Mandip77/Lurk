@@ -190,7 +190,7 @@ export default function LandingPage() {
           <div className="text-center mb-16">
             <p className="text-[#00FF94] text-sm font-semibold tracking-widest uppercase mb-3">What we catch</p>
             <h2 className="text-3xl sm:text-4xl font-bold">Vulnerabilities AI tools introduce</h2>
-            <p className="text-slate-400 mt-4 max-w-xl mx-auto">Copilot, Cursor, and Claude are powerful — but they hallucinate packages, skip auth checks, and disable RLS. We catch it before you merge.</p>
+            <p className="text-slate-400 mt-4 max-w-xl mx-auto">Copilot, Cursor, and Claude are powerful, but they hallucinate packages, skip auth checks, and disable RLS. We catch it before you merge.</p>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {[
