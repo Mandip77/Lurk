@@ -104,7 +104,7 @@ Return ONLY a JSON object:
 }`
 
       const message = await client.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 4096,
         messages: [{ role: 'user', content: prompt }],
       })
@@ -127,7 +127,7 @@ Return ONLY a JSON object:
         status: 'complete',
         findings,
         severity_score: analysis.severity_score ?? 0,
-        model_used: 'claude-haiku-4-5-20251001',
+        model_used: 'claude-3-5-haiku-20241022',
         completed_at: new Date().toISOString(),
       }).eq('id', scanId)
 

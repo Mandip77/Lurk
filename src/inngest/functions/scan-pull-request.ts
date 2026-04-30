@@ -1,4 +1,4 @@
-﻿import { inngest } from '../client'
+import { inngest } from '../client'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
 import { sendScanCompleteEmail } from '@/lib/resend'
@@ -168,7 +168,7 @@ export const scanPullRequest = inngest.createFunction(
       }
 
       const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-3-5-haiku-20241022',
         max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Analyze this PR diff:\n\n${diff}` }],
@@ -198,7 +198,7 @@ export const scanPullRequest = inngest.createFunction(
         findings,
         severity_score: score,
         tokens_used: tokensUsed,
-        model_used: 'claude-haiku-4-5-20251001',
+        model_used: 'claude-3-5-haiku-20241022',
         completed_at: new Date().toISOString(),
       }).eq('id', scanId)
 
