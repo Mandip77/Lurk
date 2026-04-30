@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { Navbar } from '@/components/layout/Navbar'
+import { DashboardShell } from '@/components/layout/DashboardShell'
+import type { UserTier } from '@/types'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -9,15 +9,20 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect('/login')
 
+  const { data: profile } = await supabase
+    .from('users')
+    .select('full_name, avatar_url, tier')
+    .eq('id', user.id)
+    .single()
+
   return (
-    <div className="flex h-screen bg-[#0B1120] text-white overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
-      </div>
-    </div>
+    <DashboardShell
+      tier={profile?.tier as UserTier | null}
+      fullName={profile?.full_name}
+      avatarUrl={profile?.avatar_url}
+      email={user.email}
+    >
+      {children}
+    </DashboardShell>
   )
 }

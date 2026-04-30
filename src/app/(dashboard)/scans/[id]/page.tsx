@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SeverityBadge } from '@/components/dashboard/SeverityBadge'
 import { GenerateReportButton } from '@/components/dashboard/GenerateReportButton'
+import { ScanStatusPoller } from '@/components/dashboard/ScanStatusPoller'
 import type { Finding, FindingSeverity } from '@/types'
 
 function ScoreGauge({ score }: { score: number }) {
@@ -83,6 +84,19 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
                 <Link href={scan.pr_url} target="_blank" className="text-[#00FF94] hover:underline">View PR →</Link>
               </>
             )}
+          </div>
+          <div className="mt-3">
+            {(scan.status === 'queued' || scan.status === 'scanning') ? (
+              <ScanStatusPoller scanId={scan.id} initialStatus={scan.status} />
+            ) : scan.status === 'complete' ? (
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/60 text-green-300 text-sm font-medium">
+                ✅ Complete
+              </span>
+            ) : scan.status === 'failed' ? (
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-900/60 text-red-300 text-sm font-medium">
+                ❌ Failed
+              </span>
+            ) : null}
           </div>
         </div>
         {userTier === 'agency' && (

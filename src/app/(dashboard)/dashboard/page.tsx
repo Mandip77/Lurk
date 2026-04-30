@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { OnboardingChecklist } from '@/components/dashboard/OnboardingChecklist'
+import { VulnerabilityTrendChart } from '@/components/dashboard/VulnerabilityTrendChart'
 import type { Scan } from '@/types'
 
 function ScoreBar({ score }: { score: number }) {
@@ -32,13 +34,23 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: repos }, { data: recentScans }] = await Promise.all([
+  const { data: repos } = await supabase
+    .from('repositories')
+    .select('id')
+    .eq('user_id', user.id)
+
+  const repoIds = repos?.map(r => r.id) ?? []
+
+  const [{ data: profile }, { data: recentScans }] = await Promise.all([
     supabase.from('users').select('tier').eq('id', user.id).single(),
-    supabase.from('repositories').select('id').eq('user_id', user.id),
-    supabase.from('scans').select('*, repositories(full_name)').in(
-      'repository_id',
-      (await supabase.from('repositories').select('id').eq('user_id', user.id)).data?.map(r => r.id) ?? []
-    ).order('created_at', { ascending: false }).limit(10),
+    repoIds.length > 0
+      ? supabase
+          .from('scans')
+          .select('*, repositories(full_name)')
+          .in('repository_id', repoIds)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      : Promise.resolve({ data: [] }),
   ])
 
   const thisMonth = new Date()
@@ -56,6 +68,8 @@ export default async function DashboardPage() {
   const totalScans = scans.length
   const criticalFindings = scans.reduce((sum, s) => sum + (s.findings?.filter(f => f.severity === 'critical').length ?? 0), 0)
   const avgScore = totalScans > 0 ? Math.round(scans.reduce((sum, s) => sum + s.severity_score, 0) / totalScans) : 0
+  const hasRepo = (repos?.length ?? 0) > 0
+  const hasScan = totalScans > 0
 
   return (
     <div className="space-y-6">
@@ -63,6 +77,10 @@ export default async function DashboardPage() {
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <p className="text-slate-400 mt-1">Security overview across your repositories</p>
       </div>
+
+      {!hasRepo && (
+        <OnboardingChecklist hasRepo={hasRepo} hasScan={hasScan} />
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-slate-900 border-slate-800 p-4">
@@ -94,6 +112,23 @@ export default async function DashboardPage() {
           </p>
         </Card>
       )}
+
+      {/* Vulnerability Trend */}
+      <Card className="bg-slate-900 border-slate-800">
+        <div className="p-4 border-b border-slate-800">
+          <h2 className="font-semibold text-white">Vulnerability Trend</h2>
+          <p className="text-slate-500 text-xs mt-0.5">Severity score over the last 30 days</p>
+        </div>
+        <div className="p-4">
+          <VulnerabilityTrendChart
+            scans={scans.map(s => ({
+              created_at: s.created_at,
+              severity_score: s.severity_score,
+              findings: s.findings ?? [],
+            }))}
+          />
+        </div>
+      </Card>
 
       <Card className="bg-slate-900 border-slate-800">
         <div className="p-4 border-b border-slate-800 flex items-center justify-between">
