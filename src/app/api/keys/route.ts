@@ -3,12 +3,16 @@ import { createHash, randomBytes } from 'crypto'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { apiLimiter, keyCreateLimiter, checkRateLimit, getIP } from '@/lib/ratelimit'
 
 const CreateKeySchema = z.object({
   name: z.string().min(1).max(100),
 })
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const { limited } = await checkRateLimit(apiLimiter, getIP(req))
+  if (limited) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -16,7 +20,7 @@ export async function GET() {
   const service = createServiceClient()
   const { data: keys, error } = await service
     .from('api_keys')
-    .select('id, name, key_prefix, last_used_at, created_at')
+    .select('id, name, key_prefix, last_used_at, created_at, expires_at')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
@@ -26,11 +30,13 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const { limited } = await checkRateLimit(keyCreateLimiter, getIP(req))
+  if (limited) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // Check tier
   const service = createServiceClient()
   const { data: profile } = await service
     .from('users')
@@ -51,12 +57,11 @@ export async function POST(req: NextRequest) {
 
   const parsed = CreateKeySchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    return NextResponse.json({ error: 'Invalid request' }, { status: 422 })
   }
 
   const { name } = parsed.data
 
-  // Generate key
   const rawKey = 'lurk_' + randomBytes(32).toString('hex')
   const keyHash = createHash('sha256').update(rawKey).digest('hex')
   const keyPrefix = rawKey.slice(0, 12)
@@ -64,12 +69,22 @@ export async function POST(req: NextRequest) {
   const { data: key, error } = await service
     .from('api_keys')
     .insert({ user_id: user.id, name, key_hash: keyHash, key_prefix: keyPrefix })
-    .select('id, name, key_prefix, last_used_at, created_at')
+    .select('id, name, key_prefix, last_used_at, created_at, expires_at')
     .single()
 
   if (error || !key) {
     return NextResponse.json({ error: 'Failed to create key' }, { status: 500 })
   }
+
+  // Log key creation to audit log
+  await service.from('audit_logs').insert({
+    user_id: user.id,
+    action: 'api_key.created',
+    resource_type: 'api_key',
+    resource_id: key.id,
+    metadata: { name },
+    ip_address: getIP(req),
+  })
 
   return NextResponse.json({ key, full_key: rawKey }, { status: 201 })
 }

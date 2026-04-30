@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
 import { inngest } from '@/inngest/client'
+import { webhookLimiter, checkRateLimit, getIP } from '@/lib/ratelimit'
 
 function hmacMatches(body: string, signature: string, secret: string): boolean {
   const expected = 'sha256=' + createHmac('sha256', secret).update(body).digest('hex')
@@ -14,6 +15,9 @@ function hmacMatches(body: string, signature: string, secret: string): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  const { limited } = await checkRateLimit(webhookLimiter, getIP(req))
+  if (limited) return new NextResponse('Rate limit exceeded', { status: 429 })
+
   const body = await req.text()
   const signature = req.headers.get('x-hub-signature-256') ?? ''
   const event = req.headers.get('x-github-event') ?? ''

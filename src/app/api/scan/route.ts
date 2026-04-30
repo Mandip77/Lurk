@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
 import { inngest } from '@/inngest/client'
+import { scanLimiter, checkRateLimit, getIP } from '@/lib/ratelimit'
 
 const ScanRequestSchema = z.object({
   repository_full_name: z.string().min(1).max(200),
@@ -35,6 +36,9 @@ async function getApiKeyUser(authHeader: string | null) {
 }
 
 export async function POST(req: NextRequest) {
+  const { limited } = await checkRateLimit(scanLimiter, getIP(req))
+  if (limited) return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+
   const authHeader = req.headers.get('authorization')
   const apiKey = await getApiKeyUser(authHeader)
 
@@ -129,6 +133,16 @@ export async function POST(req: NextRequest) {
       scanId: scan.id,
       ...(providedDiff ? { diff: providedDiff } : {}),
     },
+  })
+
+  // Audit log
+  await service.from('audit_logs').insert({
+    user_id: user.id,
+    action: 'scan.created',
+    resource_type: 'scan',
+    resource_id: scan.id,
+    metadata: { repository_full_name, pr_number, source: 'api' },
+    ip_address: getIP(req),
   })
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lurk.dev'

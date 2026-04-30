@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
+import { getIP } from '@/lib/ratelimit'
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
@@ -49,11 +50,20 @@ export async function POST(
 
   if (error || !updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  await service.from('audit_logs').insert({
+    user_id: user.id,
+    action: 'finding.suppressed',
+    resource_type: 'finding',
+    resource_id: id,
+    metadata: { reason: parsed.data.reason ?? null },
+    ip_address: getIP(req),
+  })
+
   return NextResponse.json({ finding: updated })
 }
 
 export async function DELETE(
-  _req: NextRequest,
+  _req: NextRequest,  // kept for audit logging
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
@@ -79,6 +89,15 @@ export async function DELETE(
     .single()
 
   if (error || !updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  await service.from('audit_logs').insert({
+    user_id: user.id,
+    action: 'finding.unsuppressed',
+    resource_type: 'finding',
+    resource_id: id,
+    metadata: {},
+    ip_address: getIP(_req),
+  })
 
   return NextResponse.json({ finding: updated })
 }
