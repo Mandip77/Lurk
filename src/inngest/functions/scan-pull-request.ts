@@ -168,7 +168,7 @@ export const scanPullRequest = inngest.createFunction(
       }
 
       const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 4096,
         system: systemPrompt,
         messages: [{ role: 'user', content: `Analyze this PR diff:\n\n${diff}` }],
@@ -198,7 +198,7 @@ export const scanPullRequest = inngest.createFunction(
         findings,
         severity_score: score,
         tokens_used: tokensUsed,
-        model_used: 'claude-haiku-4-5',
+        model_used: 'claude-haiku-4-5-20251001',
         completed_at: new Date().toISOString(),
       }).eq('id', scanId)
 
