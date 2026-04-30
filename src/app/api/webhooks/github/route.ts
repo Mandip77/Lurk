@@ -22,12 +22,7 @@ export async function POST(req: NextRequest) {
   const signature = req.headers.get('x-hub-signature-256') ?? ''
   const event = req.headers.get('x-github-event') ?? ''
 
-  if (event !== 'pull_request') {
-    return NextResponse.json({ ok: true })
-  }
-
   // Fast pre-filter: validate against global webhook secret before touching the DB.
-  // This prevents unauthenticated requests from probing whether a repo is registered.
   const globalSecret = process.env.GITHUB_WEBHOOK_SECRET
   if (globalSecret && !hmacMatches(body, signature, globalSecret)) {
     return new NextResponse('Unauthorized', { status: 401 })
@@ -41,6 +36,71 @@ export async function POST(req: NextRequest) {
   }
 
   const action = payload.action as string
+
+  // Handle GitHub App installation events - sync repositories to DB
+  if (event === 'installation' || event === 'installation_repositories') {
+    const supabase = createServiceClient()
+    const installation = payload.installation as { id: number; account: { login: string; id: number } }
+    const installationId = installation.id
+
+    // Find user by GitHub account ID
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('github_id', installation.account.id)
+      .maybeSingle()
+
+    if (!user) return NextResponse.json({ ok: true })
+
+    if (event === 'installation' && action === 'deleted') {
+      // App uninstalled - mark all repos from this installation as inactive
+      await supabase
+        .from('repositories')
+        .update({ is_active: false })
+        .eq('installation_id', String(installationId))
+        .eq('user_id', user.id)
+      return NextResponse.json({ ok: true })
+    }
+
+    // Repos added (installation created or repos added)
+    const addedRepos = (
+      action === 'created'
+        ? (payload.repositories as Array<{ id: number; full_name: string; private: boolean }> | null) ?? []
+        : (payload.repositories_added as Array<{ id: number; full_name: string; private: boolean }> | null) ?? []
+    )
+
+    if (addedRepos.length > 0) {
+      const rows = addedRepos.map(r => ({
+        user_id: user.id,
+        installation_id: String(installationId),
+        provider_repo_id: String(r.id),
+        full_name: r.full_name,
+        provider: 'github',
+        is_active: true,
+        webhook_secret: crypto.randomUUID(),
+      }))
+      await supabase.from('repositories').upsert(rows, { onConflict: 'user_id,provider,provider_repo_id' })
+    }
+
+    // Repos removed
+    if (event === 'installation_repositories' && action === 'removed') {
+      const removedRepos = (payload.repositories_removed as Array<{ id: number }> | null) ?? []
+      if (removedRepos.length > 0) {
+        await supabase
+          .from('repositories')
+          .update({ is_active: false })
+          .in('provider_repo_id', removedRepos.map(r => String(r.id)))
+          .eq('user_id', user.id)
+      }
+    }
+
+    return NextResponse.json({ ok: true })
+  }
+
+  if (event !== 'pull_request') {
+    return NextResponse.json({ ok: true })
+  }
+
   if (!['opened', 'synchronize', 'reopened'].includes(action)) {
     return NextResponse.json({ ok: true })
   }

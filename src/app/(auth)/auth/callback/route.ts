@@ -30,6 +30,12 @@ export async function GET(req: NextRequest) {
     .eq('id', user.id)
     .maybeSingle()
 
+  // Always sync github_id (needed for installation webhook linking)
+  const githubId = user.user_metadata?.provider_id ? Number(user.user_metadata.provider_id) : null
+  if (githubId) {
+    await serviceClient.from('users').update({ github_id: githubId }).eq('id', user.id)
+  }
+
   if (!existingUser?.stripe_customer_id) {
     try {
       const email = user.email || `user-${user.id}@placeholder.com`
@@ -44,6 +50,7 @@ export async function GET(req: NextRequest) {
         full_name: user.user_metadata?.full_name ?? null,
         avatar_url: user.user_metadata?.avatar_url ?? null,
         stripe_customer_id: customer.id,
+        github_id: user.user_metadata?.provider_id ? Number(user.user_metadata.provider_id) : null,
       }, { onConflict: 'id' })
     } catch (err) {
       console.error('Failed to create stripe customer or profile:', err)
