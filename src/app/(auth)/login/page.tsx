@@ -27,6 +27,7 @@ export default function LoginPage() {
   }
 
   async function handleGitHub() {
+    setLoading(true)
     const supabase = createClient()
     const appUrl = window.location.origin
     await supabase.auth.signInWithOAuth({
@@ -36,6 +37,7 @@ export default function LoginPage() {
   }
 
   async function handleGoogle() {
+    setLoading(true)
     const supabase = createClient()
     const appUrl = window.location.origin
     await supabase.auth.signInWithOAuth({
@@ -56,6 +58,7 @@ export default function LoginPage() {
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 space-y-3">
           <Button
             onClick={handleGitHub}
+            disabled={loading}
             className="w-full bg-white text-black hover:bg-slate-100 font-medium"
             size="lg"
           >
@@ -67,6 +70,7 @@ export default function LoginPage() {
 
           <Button
             onClick={handleGoogle}
+            disabled={loading}
             className="w-full bg-white text-black hover:bg-slate-100 font-medium"
             size="lg"
           >

@@ -28,21 +28,26 @@ export async function GET(req: NextRequest) {
     .from('users')
     .select('id, stripe_customer_id')
     .eq('id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!existingUser?.stripe_customer_id) {
-    const customer = await createStripeCustomer(
-      user.email!,
-      user.user_metadata?.full_name
-    )
+    try {
+      const email = user.email || `user-${user.id}@placeholder.com`
+      const customer = await createStripeCustomer(
+        email,
+        user.user_metadata?.full_name
+      )
 
-    await serviceClient.from('users').upsert({
-      id: user.id,
-      email: user.email!,
-      full_name: user.user_metadata?.full_name ?? null,
-      avatar_url: user.user_metadata?.avatar_url ?? null,
-      stripe_customer_id: customer.id,
-    }, { onConflict: 'id' })
+      await serviceClient.from('users').upsert({
+        id: user.id,
+        email: email,
+        full_name: user.user_metadata?.full_name ?? null,
+        avatar_url: user.user_metadata?.avatar_url ?? null,
+        stripe_customer_id: customer.id,
+      }, { onConflict: 'id' })
+    } catch (err) {
+      console.error('Failed to create stripe customer or profile:', err)
+    }
   }
 
   return NextResponse.redirect(`${origin}/dashboard`)
