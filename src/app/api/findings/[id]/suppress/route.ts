@@ -35,7 +35,7 @@ export async function POST(
 
   const service = createServiceClient()
 
-  // Atomic: ownership enforced inside the UPDATE itself — no separate SELECT needed
+  // Atomic: ownership enforced inside the UPDATE itself - no separate SELECT needed
   const { data: updated, error } = await service
     .from('findings')
     .update({

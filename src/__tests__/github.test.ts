@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Tests for GitHub utility functions.
  * Uses inline implementations of pure functions to avoid ESM issues with octokit.
  */
@@ -6,7 +6,7 @@
 import { createHmac } from 'crypto'
 import { timingSafeEqual } from 'crypto'
 
-// Inline copy of verifyGitHubSignature — tests the algorithm, not the import
+// Inline copy of verifyGitHubSignature - tests the algorithm, not the import
 function verifyGitHubSignature(payload: string, signature: string, secret: string): boolean {
   const hmac = createHmac('sha256', secret)
   hmac.update(payload)
@@ -41,7 +41,7 @@ function formatScanComment(
   } else {
     comment += `### Findings (${findings.length})\n\n`
     for (const f of findings.slice(0, 10)) {
-      comment += `#### ${SEVERITY_ICONS[f.severity] ?? '⚪'} ${f.severity.toUpperCase()} — ${f.title}\n`
+      comment += `#### ${SEVERITY_ICONS[f.severity] ?? '⚪'} ${f.severity.toUpperCase()} - ${f.title}\n`
       if (f.file_path) {
         comment += `**File:** \`${f.file_path}\``
         if (f.line_start) comment += ` · Lines ${f.line_start}${f.line_end && f.line_end !== f.line_start ? `-${f.line_end}` : ''}`

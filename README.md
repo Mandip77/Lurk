@@ -1,4 +1,4 @@
-# Lurk — Security Scanning for AI-Generated Code
+﻿# Lurk - Security Scanning for AI-Generated Code
 
 Lurk automatically scans every GitHub pull request for security vulnerabilities introduced by AI coding assistants (Copilot, Cursor, Claude). It posts findings directly as PR comments and emails you a report.
 
@@ -23,7 +23,7 @@ Lurk automatically scans every GitHub pull request for security vulnerabilities 
 |---|---|
 | Framework | Next.js 16 (App Router, TypeScript) |
 | Database | Supabase (Postgres + RLS) |
-| Auth | Supabase Auth — magic link, GitHub OAuth, Google OAuth |
+| Auth | Supabase Auth - magic link, GitHub OAuth, Google OAuth |
 | AI Scanning | Anthropic Claude Haiku |
 | Background Jobs | Inngest |
 | Payments | Stripe |
@@ -35,23 +35,23 @@ Lurk automatically scans every GitHub pull request for security vulnerabilities 
 
 ## Features
 
-- **Automatic PR scanning** — installs as a GitHub App; every opened or updated PR triggers a scan
-- **AI-powered analysis** — Claude Haiku analyzes the diff against a curated security prompt
-- **PR comments** — findings posted directly on the pull request with severity, file, and line numbers
-- **Fix suggestions** — Pro and Agency users see concrete code fixes for each finding
-- **Custom rules** — define your own regex patterns with custom severity levels
-- **Suppress findings** — dismiss false positives with a reason, tracked in the audit log
-- **Diff viewer** — view the raw PR diff with findings highlighted inline
-- **Real-time status** — scan progress polling on the scan detail page
-- **API access** — trigger scans programmatically via REST API with Bearer tokens
-- **API keys** — create, list, and revoke keys from the dashboard
-- **Referral system** — share a referral code to earn bonus free scans
-- **Weekly email digest** — summary of the past week's scans sent every Monday
-- **White-label PDF reports** — Agency tier can generate branded reports for clients
-- **Usage tracking** — quota progress bar with 6-month scan history
-- **Dark mode** — system-aware with manual toggle
-- **Keyboard shortcuts** — `g d/s/r/u` to navigate, `?` for the cheat sheet
-- **Audit logs** — every sensitive action (key creation, suppression) is recorded
+- **Automatic PR scanning** - installs as a GitHub App; every opened or updated PR triggers a scan
+- **AI-powered analysis** - Claude Haiku analyzes the diff against a curated security prompt
+- **PR comments** - findings posted directly on the pull request with severity, file, and line numbers
+- **Fix suggestions** - Pro and Agency users see concrete code fixes for each finding
+- **Custom rules** - define your own regex patterns with custom severity levels
+- **Suppress findings** - dismiss false positives with a reason, tracked in the audit log
+- **Diff viewer** - view the raw PR diff with findings highlighted inline
+- **Real-time status** - scan progress polling on the scan detail page
+- **API access** - trigger scans programmatically via REST API with Bearer tokens
+- **API keys** - create, list, and revoke keys from the dashboard
+- **Referral system** - share a referral code to earn bonus free scans
+- **Weekly email digest** - summary of the past week's scans sent every Monday
+- **White-label PDF reports** - Agency tier can generate branded reports for clients
+- **Usage tracking** - quota progress bar with 6-month scan history
+- **Dark mode** - system-aware with manual toggle
+- **Keyboard shortcuts** - `g d/s/r/u` to navigate, `?` for the cheat sheet
+- **Audit logs** - every sensitive action (key creation, suppression) is recorded
 
 ---
 
@@ -125,7 +125,7 @@ STRIPE_AGENCY_PRICE_ID=price_...      # server-only copy (never sent to browser)
 # Resend
 RESEND_API_KEY=re_...
 
-# Upstash Redis (optional in dev — rate limiting skips gracefully if unset)
+# Upstash Redis (optional in dev - rate limiting skips gracefully if unset)
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=your-token
 
@@ -167,7 +167,7 @@ Open [http://localhost:3000](http://localhost:3000).
 
 1. Go to **GitHub → Settings → Developer settings → GitHub Apps → New GitHub App**
 2. Set the webhook URL to `https://your-domain.com/api/webhooks/github`
-3. Set the webhook secret — use the same value as `GITHUB_WEBHOOK_SECRET`
+3. Set the webhook secret - use the same value as `GITHUB_WEBHOOK_SECRET`
 4. Grant permissions: **Pull requests** (read & write), **Issues** (write)
 5. Subscribe to events: **Pull request**
 6. Generate a private key and paste it as `GITHUB_APP_PRIVATE_KEY`
@@ -247,7 +247,7 @@ src/
     ├── resend.ts         # Email templates
     └── ratelimit.ts      # Upstash rate limiting
 supabase/
-└── migrations/           # SQL migrations — run in order
+└── migrations/           # SQL migrations - run in order
 ```
 
 ---
@@ -264,7 +264,7 @@ Tests cover HMAC signature verification, severity scoring, input validation, IDO
 
 ## Deployment
 
-Push to `main` — Vercel deploys automatically.
+Push to `main` - Vercel deploys automatically.
 
 Ensure all environment variables from `.env.example` are added in **Vercel → Settings → Environment Variables** before the first deploy.
 
@@ -274,11 +274,11 @@ Ensure all environment variables from `.env.example` are added in **Vercel → S
 
 - RLS enabled on every Supabase table; service role key never reaches the client
 - Ownership verified on every resource query (IDOR protection)
-- Atomic database operations — no TOCTOU race conditions
+- Atomic database operations - no TOCTOU race conditions
 - HMAC verified on all webhooks with `timingSafeEqual`
 - Rate limiting on all public endpoints via Upstash Redis
-- Prompt injection mitigated — user-controlled strings sanitized before AI context
-- SSRF blocked on user-supplied URLs — HTTPS-only, private IP ranges rejected
+- Prompt injection mitigated - user-controlled strings sanitized before AI context
+- SSRF blocked on user-supplied URLs - HTTPS-only, private IP ranges rejected
 - Audit log for all sensitive actions
 - Security headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Permissions-Policy
 

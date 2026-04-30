@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef } from 'react'
 
@@ -36,7 +36,7 @@ export function ScanStatusPoller({ scanId, initialStatus }: ScanStatusPollerProp
           timerRef.current = setTimeout(poll, POLL_INTERVAL_MS)
         }
       } catch {
-        // Network error — retry
+        // Network error - retry
         timerRef.current = setTimeout(poll, POLL_INTERVAL_MS)
       }
     }

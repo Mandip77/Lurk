@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 import { z } from 'zod'
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
 
   const serviceClient = createServiceClient()
 
-  // Verify ownership — prevents IDOR
+  // Verify ownership - prevents IDOR
   const { data: scan } = await supabase
     .from('scans')
     .select('id, repository_id')

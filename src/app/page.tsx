@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
@@ -77,7 +77,7 @@ export default function LandingPage() {
         <div className={`relative max-w-4xl mx-auto text-center transition-all duration-700 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="inline-flex items-center gap-2 border border-[#00FF94]/20 bg-[#00FF94]/5 rounded-full px-4 py-1.5 text-sm text-[#00FF94] mb-8 hover:bg-[#00FF94]/10 transition-colors duration-200 cursor-default">
             <span className="w-1.5 h-1.5 rounded-full bg-[#00FF94] animate-pulse" />
-            Now scanning with Claude Haiku — $0.0003 per PR
+            Now scanning with Claude Haiku - $0.0003 per PR
           </div>
 
           <h1 className="text-5xl sm:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
@@ -90,7 +90,7 @@ export default function LandingPage() {
           </h1>
 
           <p className={`text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed transition-all duration-700 delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            Lurk connects to your GitHub repositories and automatically audits every pull request for security vulnerabilities that AI code assistants commonly introduce — RLS misconfigurations, hardcoded secrets, broken auth, and supply chain risks.
+            Lurk connects to your GitHub repositories and automatically audits every pull request for security vulnerabilities that AI code assistants commonly introduce - RLS misconfigurations, hardcoded secrets, broken auth, and supply chain risks.
           </p>
 
           <div className={`flex flex-col sm:flex-row gap-3 justify-center transition-all duration-700 delay-200 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -112,7 +112,7 @@ export default function LandingPage() {
               <div className="w-3 h-3 rounded-full bg-red-500/60" />
               <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
               <div className="w-3 h-3 rounded-full bg-green-500/60" />
-              <span className="ml-2 text-xs text-slate-500 font-mono">GitHub PR #47 — Lurk Security Scan</span>
+              <span className="ml-2 text-xs text-slate-500 font-mono">GitHub PR #47 - Lurk Security Scan</span>
               <span className="ml-auto text-xs text-slate-600">just now</span>
             </div>
             <div className="p-5 font-mono text-sm space-y-3">
@@ -128,7 +128,7 @@ export default function LandingPage() {
                   className={`rounded-lg border p-3 space-y-1 transition-all duration-500 ${f.bg}`}
                   style={{ transitionDelay: `${600 + f.delay}ms`, opacity: visible ? 1 : 0, transform: visible ? 'translateX(0)' : 'translateX(-12px)' }}
                 >
-                  <p className={`${f.color} text-xs font-semibold`}>● {f.label} — {f.text}</p>
+                  <p className={`${f.color} text-xs font-semibold`}>● {f.label} - {f.text}</p>
                   <p className="text-slate-500 text-xs">{f.file}</p>
                 </div>
               ))}
@@ -266,7 +266,7 @@ export default function LandingPage() {
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Your next PR is being watched</h2>
           <p className="text-slate-400 mb-8 leading-relaxed">Connect your first repository in 2 minutes. Free forever for small teams.</p>
           <LinkButton href="/login" className="bg-[#00FF94] text-[#060d1a] hover:bg-[#00e085] font-semibold text-base px-10 py-3 h-auto rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-xl hover:shadow-[#00FF94]/25">
-            Get started — it&apos;s free →
+            Get started - it&apos;s free →
           </LinkButton>
         </div>
       </section>

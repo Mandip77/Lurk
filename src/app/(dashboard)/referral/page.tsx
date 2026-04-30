@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState, useCallback } from 'react'
 import { Card } from '@/components/ui/card'
@@ -133,7 +133,7 @@ export default function ReferralPage() {
             'Share your unique invite link with a friend',
             'They sign up at lurk-cyan.vercel.app using your link',
             'You both receive +5 free scans instantly',
-            'No limit — invite as many friends as you like',
+            'No limit - invite as many friends as you like',
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-3 text-sm text-slate-300">
               <span className="w-6 h-6 rounded-full bg-[#00FF94]/10 border border-[#00FF94]/30 text-[#00FF94] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">

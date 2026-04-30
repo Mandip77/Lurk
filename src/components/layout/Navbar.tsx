@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -22,7 +22,7 @@ interface NavbarProps {
 export function Navbar({ tier, fullName, avatarUrl, email, onMenuToggle }: NavbarProps) {
   return (
     <header className="h-14 border-b border-white/5 bg-[#080f1e] flex items-center justify-between px-4 sm:px-6">
-      {/* Hamburger — mobile only */}
+      {/* Hamburger - mobile only */}
       <button
         className="md:hidden flex flex-col justify-center items-center w-8 h-8 gap-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
         onClick={onMenuToggle}

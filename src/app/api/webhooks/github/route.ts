@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'crypto'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Quota check — uses get_monthly_limit() to respect referral bonus scans
+  // Quota check - uses get_monthly_limit() to respect referral bonus scans
   if (user.tier === 'free') {
     const thisMonth = new Date()
     thisMonth.setDate(1)
@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
       body: `## 🛡️ Lurk\n\n🔍 Scanning this PR for AI-generated code vulnerabilities...`,
     })
   } catch {
-    // Non-fatal — continue even if comment fails
+    // Non-fatal - continue even if comment fails
   }
 
   await inngest.send({ name: 'scan/requested', data: { scanId: scan.id } })

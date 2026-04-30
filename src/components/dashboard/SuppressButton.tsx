@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -111,12 +111,12 @@ export function SuppressButton({
           <div className="bg-[#0d1526] border border-slate-700 rounded-xl max-w-sm w-full p-6 space-y-4">
             <h3 className="text-white font-semibold">Suppress finding</h3>
             <p className="text-slate-400 text-sm">
-              Optionally add a reason — this helps your team understand why this finding was ignored.
+              Optionally add a reason - this helps your team understand why this finding was ignored.
             </p>
             <textarea
               value={reason}
               onChange={e => setReason(e.target.value)}
-              placeholder="e.g. False positive — this is intentional"
+              placeholder="e.g. False positive - this is intentional"
               rows={3}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#00FF94]/40 resize-none"
             />

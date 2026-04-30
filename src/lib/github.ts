@@ -1,4 +1,4 @@
-import { createAppAuth } from '@octokit/auth-app'
+﻿import { createAppAuth } from '@octokit/auth-app'
 import { Octokit } from '@octokit/rest'
 import { createHmac, timingSafeEqual } from 'crypto'
 
@@ -107,7 +107,7 @@ export function formatScanComment(
   } else {
     comment += `### Findings (${findings.length})\n\n`
     for (const f of findings.slice(0, 10)) {
-      comment += `#### ${severityIcon(f.severity)} ${f.severity.toUpperCase()} — ${f.title}\n`
+      comment += `#### ${severityIcon(f.severity)} ${f.severity.toUpperCase()} - ${f.title}\n`
       if (f.file_path) {
         comment += `**File:** \`${f.file_path}\``
         if (f.line_start) comment += ` · Lines ${f.line_start}${f.line_end && f.line_end !== f.line_start ? `-${f.line_end}` : ''}`

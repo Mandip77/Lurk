@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/service'
@@ -29,7 +29,7 @@ async function getApiKeyUser(authHeader: string | null) {
   // Reject expired keys
   if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) return null
 
-  // Update last_used_at (fire-and-forget — don't block on it)
+  // Update last_used_at (fire-and-forget - don't block on it)
   service.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', apiKey.id)
 
   return apiKey
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const apiKey = await getApiKeyUser(authHeader)
 
   if (!apiKey) {
-    return NextResponse.json({ error: 'Unauthorized — provide a valid Bearer API key' }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized - provide a valid Bearer API key' }, { status: 401 })
   }
 
   const user = (Array.isArray(apiKey.users) ? apiKey.users[0] : apiKey.users) as { id: string; tier: string; email: string }
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   const { repository_full_name, pr_number, diff: providedDiff } = parsed.data
   const service = createServiceClient()
 
-  // Quota check — respects bonus scans from referrals via get_monthly_limit()
+  // Quota check - respects bonus scans from referrals via get_monthly_limit()
   const thisMonth = new Date()
   thisMonth.setDate(1)
   const monthStr = thisMonth.toISOString().split('T')[0]
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Find repository — scoped to this user
+  // Find repository - scoped to this user
   const { data: repo } = await service
     .from('repositories')
     .select('*')

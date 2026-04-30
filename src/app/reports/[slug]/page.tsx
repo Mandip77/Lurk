@@ -125,12 +125,12 @@ export default async function PublicReportPage({ params }: { params: Promise<{ s
               </div>
               <div>
                 <p className="text-slate-400 text-sm">Repository</p>
-                <p className="text-white font-medium text-sm mt-1">{scan?.repositories?.full_name ?? '—'}</p>
+                <p className="text-white font-medium text-sm mt-1">{scan?.repositories?.full_name ?? 'N/A'}</p>
               </div>
               <div>
                 <p className="text-slate-400 text-sm">Scan Date</p>
                 <p className="text-white font-medium text-sm mt-1">
-                  {scan?.completed_at ? new Date(scan.completed_at).toLocaleDateString() : '—'}
+                  {scan?.completed_at ? new Date(scan.completed_at).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
             </div>

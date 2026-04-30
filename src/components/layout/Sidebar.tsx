@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -77,7 +77,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Desktop sidebar — always visible on md+ */}
+      {/* Desktop sidebar - always visible on md+ */}
       <div className="hidden md:flex">
         {sidebarContent}
       </div>

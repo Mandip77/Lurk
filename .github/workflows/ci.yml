@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
 
       - name: Security audit (high severity)
         run: npm audit --audit-level=high
-        # Allow the step to fail without blocking CI — treat as a warning
+        # Allow the step to fail without blocking CI - treat as a warning
         continue-on-error: true
 
   test:

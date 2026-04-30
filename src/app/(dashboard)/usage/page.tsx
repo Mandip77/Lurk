@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+﻿import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -103,7 +103,7 @@ export default async function UsagePage() {
         <CardHeader className="border-b border-slate-800">
           <div className="flex items-center justify-between">
             <CardTitle className="text-white text-base">
-              This Month — {formatMonth(currentMonthStr)}
+              This Month - {formatMonth(currentMonthStr)}
             </CardTitle>
             <span className="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-400 uppercase font-medium">
               {tier}

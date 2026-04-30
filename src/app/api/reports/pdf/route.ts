@@ -1,11 +1,11 @@
-/**
+﻿/**
  * PDF generation via Python/WeasyPrint.
  *
  * Self-hosted: WeasyPrint requires libpango + libcairo.
  *   Install deps: pip install -r requirements.txt
  *   Linux: apt-get install -y python3-weasyprint libpango-1.0-0 libharfbuzz0b
  *
- * Vercel: This route returns 501 — use the web report page + window.print() instead.
+ * Vercel: This route returns 501 - use the web report page + window.print() instead.
  *   The /reports/[slug] page already has a "Print / Save PDF" button.
  */
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'PDF generation via WeasyPrint requires a self-hosted deployment.',
-        hint: 'Use the /reports/[slug] web page — it has a "Print / Save PDF" button that produces identical output.',
+        hint: 'Use the /reports/[slug] web page - it has a "Print / Save PDF" button that produces identical output.',
         docs: 'https://github.com/your-org/lurk#pdf-generation',
       },
       { status: 501 }

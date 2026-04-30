@@ -1,6 +1,6 @@
--- Atomic quota check-and-read (avoids race condition in webhook handler)
+﻿-- Atomic quota check-and-read (avoids race condition in webhook handler)
 -- Returns TRUE if the user is under the limit, FALSE if they've hit it.
--- Does NOT increment — increment still happens via increment_scan_usage() after scan creation.
+-- Does NOT increment - increment still happens via increment_scan_usage() after scan creation.
 CREATE OR REPLACE FUNCTION public.check_quota(
   p_user_id UUID,
   p_month DATE,

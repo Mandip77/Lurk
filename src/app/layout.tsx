@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+﻿import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { ThemeProvider } from 'next-themes'
 import './globals.css'
@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Lurk — Security scanning for AI-generated code',
+  title: 'Lurk - Security scanning for AI-generated code',
   description:
     'Automatically scan every pull request for security vulnerabilities introduced by AI-generated code.',
 }

@@ -1,4 +1,4 @@
--- Enable UUID extension
+﻿-- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Users table (extends auth.users)
@@ -71,7 +71,7 @@ CREATE TABLE public.scan_usage (
   UNIQUE(user_id, month)
 );
 
--- Web reports (Agency tier — shareable, printable, white-label)
+-- Web reports (Agency tier - shareable, printable, white-label)
 CREATE TABLE public.reports (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,

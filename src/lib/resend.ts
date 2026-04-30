@@ -1,4 +1,4 @@
-import { Resend } from 'resend'
+﻿import { Resend } from 'resend'
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
@@ -38,7 +38,7 @@ export async function sendScanCompleteEmail({
     subject: `[${statusLabel}] Security scan complete for ${repoName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0B1120;">🛡️ Lurk — Scan Complete</h2>
+        <h2 style="color: #0B1120;">🛡️ Lurk - Scan Complete</h2>
         <p>Hi ${esc(name ?? 'there')},</p>
         <p>Your security scan for <strong>${esc(repoName)}</strong> is complete.</p>
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
@@ -56,7 +56,7 @@ export async function sendScanCompleteEmail({
           </tr>
         </table>
         <a href="${scanUrl}" style="background: #00FF94; color: #0B1120; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Full Report</a>
-        <p style="margin-top: 32px; color: #64748b; font-size: 12px;">Lurk — Security scanning for AI-generated code</p>
+        <p style="margin-top: 32px; color: #64748b; font-size: 12px;">Lurk - Security scanning for AI-generated code</p>
       </div>
     `,
   })
@@ -84,11 +84,11 @@ export async function sendWeeklyDigestEmail({
   return getResend().emails.send({
     from: 'Lurk <security@lurk.dev>',
     to,
-    subject: `Your Lurk security digest — week of ${weekOf}`,
+    subject: `Your Lurk security digest - week of ${weekOf}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 24px;">
         <div style="background: #0B1120; border-radius: 12px; padding: 32px; color: white;">
-          <h2 style="margin: 0 0 8px 0; color: #00FF94; font-size: 20px;">👁️ Lurk — Weekly Digest</h2>
+          <h2 style="margin: 0 0 8px 0; color: #00FF94; font-size: 20px;">👁️ Lurk - Weekly Digest</h2>
           <p style="margin: 0 0 24px 0; color: #94a3b8; font-size: 14px;">Week of ${weekOf}</p>
 
           <p style="color: #e2e8f0; margin: 0 0 24px 0;">Hi ${esc(name ?? 'there')},</p>
@@ -151,7 +151,7 @@ export async function sendWeeklyDigestEmail({
           <a href="${appUrl}/dashboard" style="display: inline-block; background: #00FF94; color: #0B1120; padding: 12px 28px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 14px;">View Dashboard →</a>
         </div>
         <p style="text-align: center; color: #94a3b8; font-size: 11px; margin-top: 16px;">
-          Lurk — Security scanning for AI-generated code<br/>
+          Lurk - Security scanning for AI-generated code<br/>
           You're receiving this because you have an active Lurk account. To unsubscribe, update your notification preferences in <a href="${appUrl}/settings" style="color: #00FF94;">Settings</a>.
         </p>
       </div>

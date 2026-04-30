@@ -1,9 +1,9 @@
-/**
+﻿/**
  * Security-focused tests covering:
- * 1. Auth & Authorization — IDOR prevention, ownership checks
- * 2. Injection & Input Validation — zod schema validation
- * 3. API & Data Exposure — price ID whitelist, error handling
- * 4. Business Logic — quota logic, idempotency, stripe price validation
+ * 1. Auth & Authorization - IDOR prevention, ownership checks
+ * 2. Injection & Input Validation - zod schema validation
+ * 3. API & Data Exposure - price ID whitelist, error handling
+ * 4. Business Logic - quota logic, idempotency, stripe price validation
  */
 
 import { z } from 'zod'
@@ -120,9 +120,9 @@ describe('Quota check logic', () => {
   })
 })
 
-// ─── 4. IDEMPOTENCY — DUPLICATE WEBHOOK DETECTION ───────────────────────────
+// ─── 4. IDEMPOTENCY - DUPLICATE WEBHOOK DETECTION ───────────────────────────
 
-describe('Idempotency — duplicate scan detection', () => {
+describe('Idempotency - duplicate scan detection', () => {
   function isDuplicate(lastScanCreatedAt: Date | null, windowMs = 30_000): boolean {
     if (!lastScanCreatedAt) return false
     return Date.now() - lastScanCreatedAt.getTime() < windowMs
@@ -153,9 +153,9 @@ describe('Idempotency — duplicate scan detection', () => {
   })
 })
 
-// ─── 5. IDOR PREVENTION — OWNERSHIP CHECK LOGIC ─────────────────────────────
+// ─── 5. IDOR PREVENTION - OWNERSHIP CHECK LOGIC ─────────────────────────────
 
-describe('IDOR — ownership validation', () => {
+describe('IDOR - ownership validation', () => {
   type Scan = { id: string; user_id: string }
 
   function canAccessScan(scan: Scan | null, requestingUserId: string): boolean {

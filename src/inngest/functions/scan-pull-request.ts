@@ -1,4 +1,4 @@
-import { inngest } from '../client'
+﻿import { inngest } from '../client'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
 import { sendScanCompleteEmail } from '@/lib/resend'
@@ -83,7 +83,7 @@ function buildPRComment(
     )
 
     for (const f of sorted) {
-      comment += `### ${SEVERITY_ICONS[f.severity] ?? '⚪'} ${f.severity.toUpperCase()} — ${f.title}\n`
+      comment += `### ${SEVERITY_ICONS[f.severity] ?? '⚪'} ${f.severity.toUpperCase()} - ${f.title}\n`
       comment += `**File**: \`${f.file_path}\``
       if (f.line_start) comment += ` · Lines ${f.line_start}${f.line_end && f.line_end !== f.line_start ? `-${f.line_end}` : ''}`
       comment += ` | **Category**: ${f.category.replace(/_/g, ' ')}\n\n`

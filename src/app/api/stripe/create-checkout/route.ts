@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createCheckoutSession } from '@/lib/stripe'
 
@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const { priceId } = body
 
-  // Validate priceId against known env-configured prices — prevents price manipulation
+  // Validate priceId against known env-configured prices - prevents price manipulation
   const validPriceIds = [
     process.env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID,
     process.env.NEXT_PUBLIC_STRIPE_AGENCY_PRICE_ID,
