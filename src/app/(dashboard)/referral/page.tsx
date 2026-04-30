@@ -75,7 +75,7 @@ export default function ReferralPage() {
             <p className="text-white font-semibold">Earn +5 free scans per referral</p>
             <p className="text-slate-400 text-sm mt-1">
               For each friend who signs up using your link, you both get 5 bonus scans added
-              to your account — no strings attached.
+              to your account - no strings attached.
             </p>
           </div>
         </div>

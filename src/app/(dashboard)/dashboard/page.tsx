@@ -45,11 +45,11 @@ export default async function DashboardPage() {
     supabase.from('users').select('tier').eq('id', user.id).single(),
     repoIds.length > 0
       ? supabase
-          .from('scans')
-          .select('*, repositories(full_name)')
-          .in('repository_id', repoIds)
-          .order('created_at', { ascending: false })
-          .limit(10)
+        .from('scans')
+        .select('*, repositories(full_name)')
+        .in('repository_id', repoIds)
+        .order('created_at', { ascending: false })
+        .limit(10)
       : Promise.resolve({ data: [] }),
   ])
 
@@ -92,10 +92,10 @@ export default async function DashboardPage() {
     riskiestAvg >= 75
       ? 'text-red-400'
       : riskiestAvg >= 50
-      ? 'text-orange-400'
-      : riskiestAvg >= 25
-      ? 'text-yellow-400'
-      : 'text-green-400'
+        ? 'text-orange-400'
+        : riskiestAvg >= 25
+          ? 'text-yellow-400'
+          : 'text-green-400'
 
   // Most common vulnerability categories
   const categoryCount: Record<string, number> = {}
@@ -177,15 +177,14 @@ export default async function DashboardPage() {
               </div>
               <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${
-                    riskiestAvg >= 75
+                  className={`h-full rounded-full ${riskiestAvg >= 75
                       ? 'bg-red-500'
                       : riskiestAvg >= 50
-                      ? 'bg-orange-500'
-                      : riskiestAvg >= 25
-                      ? 'bg-yellow-500'
-                      : 'bg-green-500'
-                  }`}
+                        ? 'bg-orange-500'
+                        : riskiestAvg >= 25
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500'
+                    }`}
                   style={{ width: `${riskiestAvg}%` }}
                 />
               </div>

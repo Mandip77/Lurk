@@ -29,7 +29,7 @@ export default async function SettingsPage() {
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Name</span>
-            <span className="text-white">{profile?.full_name ?? '—'}</span>
+            <span className="text-white">{profile?.full_name ?? '-'}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-400">Plan</span>

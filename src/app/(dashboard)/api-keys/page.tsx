@@ -32,7 +32,7 @@ function NewKeyModal({
       <div className="bg-[#0d1526] border border-slate-700 rounded-xl max-w-lg w-full p-6 space-y-4">
         <h2 className="text-white font-bold text-lg">Your new API key</h2>
         <p className="text-slate-400 text-sm">
-          Copy this key now — it will never be shown again.
+          Copy this key now - it will never be shown again.
         </p>
         <div className="bg-slate-950 border border-slate-700 rounded p-3 font-mono text-[#00FF94] text-sm break-all">
           {fullKey}
@@ -120,7 +120,7 @@ export default function ApiKeysPage() {
           setKeys(data.keys ?? [])
         }
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false))
   }, [])
 

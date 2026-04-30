@@ -22,7 +22,7 @@ export default async function ReportsPage() {
             White-label shareable reports are available on the Agency plan.
           </p>
           <p className="text-slate-500 text-sm mb-6">
-            Reports are web pages — shareable, printable, and save to PDF via the browser.
+            Reports are web pages - shareable, printable, and save to PDF via the browser.
           </p>
           <LinkButton href="/pricing" className="bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium">
             Upgrade to Agency
