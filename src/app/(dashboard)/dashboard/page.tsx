@@ -36,7 +36,7 @@ export default async function DashboardPage() {
 
   const { data: repos } = await supabase
     .from('repositories')
-    .select('id')
+    .select('id, is_active')
     .eq('user_id', user.id)
 
   const repoIds = repos?.map(r => r.id) ?? []
@@ -69,6 +69,7 @@ export default async function DashboardPage() {
   const criticalFindings = scans.reduce((sum, s) => sum + (s.findings?.filter(f => f.severity === 'critical').length ?? 0), 0)
   const avgScore = totalScans > 0 ? Math.round(scans.reduce((sum, s) => sum + s.severity_score, 0) / totalScans) : 0
   const hasRepo = (repos?.length ?? 0) > 0
+  const hasActiveRepo = repos?.some(r => r.is_active) ?? false
   const hasScan = totalScans > 0
 
   // Riskiest repo: group by repo, calc avg severity_score
@@ -124,7 +125,7 @@ export default async function DashboardPage() {
         <p className="text-slate-400 mt-1">Security overview across your repositories</p>
       </div>
 
-      {!hasRepo && (
+      {(!hasRepo || !hasActiveRepo || !hasScan) && (
         <OnboardingChecklist hasRepo={hasRepo} hasScan={hasScan} />
       )}
 
@@ -244,8 +245,22 @@ export default async function DashboardPage() {
         <div className="divide-y divide-slate-800">
           {scans.length === 0 ? (
             <div className="p-8 text-center text-slate-500">
-              <p>No scans yet. Connect a repository to get started.</p>
-              <Link href="/repositories" className="text-[#00FF94] hover:underline mt-2 inline-block">Connect repository →</Link>
+              {hasActiveRepo ? (
+                <>
+                  <p>No scans yet. Open a pull request on a connected repository to trigger your first scan.</p>
+                  <Link href="/repositories" className="text-[#00FF94] hover:underline mt-2 inline-block">Manage repositories →</Link>
+                </>
+              ) : hasRepo ? (
+                <>
+                  <p>You have repositories connected but none are enabled for scanning.</p>
+                  <Link href="/repositories" className="text-[#00FF94] hover:underline mt-2 inline-block">Enable scanning →</Link>
+                </>
+              ) : (
+                <>
+                  <p>No scans yet. Connect a repository to get started.</p>
+                  <Link href="/repositories" className="text-[#00FF94] hover:underline mt-2 inline-block">Connect repository →</Link>
+                </>
+              )}
             </div>
           ) : (
             scans.map(scan => (
