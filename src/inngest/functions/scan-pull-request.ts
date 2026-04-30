@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk'
 import { inngest } from '../client'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
@@ -141,7 +140,8 @@ export const scanPullRequest = inngest.createFunction(
       return String(data).slice(0, 80_000)
     })
 
-    const { findings, tokensUsed } = await step.run('ai-analysis', async () => {
+    const { findings, tokensUsed } = await step.run('ai-analysis', async (): Promise<{ findings: ClaudeFinding[]; tokensUsed: number }> => {
+      const { default: Anthropic } = await import('@anthropic-ai/sdk')
       const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5',
@@ -152,17 +152,17 @@ export const scanPullRequest = inngest.createFunction(
 
       const text = response.content
         .filter(b => b.type === 'text')
-        .map(b => (b as { type: 'text'; text: string }).text)
+        .map(b => 'text' in b ? b.text : '')
         .join('')
       const tokens = response.usage.input_tokens + response.usage.output_tokens
 
       try {
         const clean = text.replace(/```json|```/g, '').trim()
         const jsonMatch = clean.match(/\[[\s\S]*\]/)
-        if (!jsonMatch) return { findings: [] as ClaudeFinding[], tokensUsed: tokens }
+        if (!jsonMatch) return { findings: [], tokensUsed: tokens }
         return { findings: JSON.parse(jsonMatch[0]) as ClaudeFinding[], tokensUsed: tokens }
       } catch {
-        return { findings: [] as ClaudeFinding[], tokensUsed: tokens }
+        return { findings: [], tokensUsed: tokens }
       }
     })
 
