@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { LinkButton } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
 
 function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
   const [count, setCount] = useState(0)
@@ -28,11 +29,18 @@ const findings = [
 export default function LandingPage() {
   const [visible, setVisible] = useState(false)
   const [navScrolled, setNavScrolled] = useState(false)
+  const [loggedIn, setLoggedIn] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100)
     const onScroll = () => setNavScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll)
+
+    // Check session so the nav shows the right buttons
+    createClient().auth.getSession().then(({ data }) => {
+      setLoggedIn(!!data.session)
+    })
+
     return () => { clearTimeout(t); window.removeEventListener('scroll', onScroll) }
   }, [])
 
@@ -56,12 +64,20 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <LinkButton href="/login" variant="outline" size="sm" className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white px-4 transition-all duration-150">
-              Sign in
-            </LinkButton>
-            <LinkButton href="/login" size="sm" className="bg-[#00FF94] text-[#060d1a] hover:bg-[#00e085] font-semibold px-4 transition-all duration-150 hover:scale-105 hover:shadow-lg hover:shadow-[#00FF94]/20">
-              Start free
-            </LinkButton>
+            {loggedIn ? (
+              <LinkButton href="/dashboard" size="sm" className="bg-[#00FF94] text-[#060d1a] hover:bg-[#00e085] font-semibold px-4 transition-all duration-150 hover:scale-105 hover:shadow-lg hover:shadow-[#00FF94]/20">
+                Go to dashboard →
+              </LinkButton>
+            ) : (
+              <>
+                <LinkButton href="/login" variant="outline" size="sm" className="text-slate-300 border-slate-700 hover:bg-slate-800 hover:text-white px-4 transition-all duration-150">
+                  Sign in
+                </LinkButton>
+                <LinkButton href="/login" size="sm" className="bg-[#00FF94] text-[#060d1a] hover:bg-[#00e085] font-semibold px-4 transition-all duration-150 hover:scale-105 hover:shadow-lg hover:shadow-[#00FF94]/20">
+                  Start free
+                </LinkButton>
+              </>
+            )}
           </div>
         </div>
       </nav>
