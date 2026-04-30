@@ -135,17 +135,23 @@ export default function ScanDetailPage() {
       <div className="flex items-start gap-6 flex-wrap">
         <ScoreGauge score={scan.severity_score} />
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-white">{scan.pr_title ?? `PR #${scan.pr_number}`}</h1>
-          <p className="text-slate-400 mt-1">{scan.repositories?.full_name}</p>
+          <h1 className="text-xl font-bold text-white">{scan.pr_title ?? (scan.pr_number ? `PR #${scan.pr_number}` : 'Codebase Scan')}</h1>
+          <p className="text-zinc-400 mt-1">{scan.repositories?.full_name} {!scan.pr_number && <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-[#00FF94]/10 text-[#00FF94] font-medium">Full Codebase</span>}</p>
           <div className="flex items-center gap-4 mt-3 text-sm text-slate-400 flex-wrap">
             <span>by {scan.pr_author}</span>
             <span>·</span>
             <span>{new Date(scan.created_at).toLocaleDateString()}</span>
             {scan.model_used && <span>· {scan.model_used}</span>}
-            {scan.pr_url && (
+            {scan.pr_url && scan.pr_number && (
               <>
                 <span>·</span>
-                <Link href={scan.pr_url} target="_blank" className="text-[#00FF94] hover:underline">View PR →</Link>
+                <Link href={scan.pr_url} target="_blank" className="text-[#00FF94] hover:underline">View PR #{scan.pr_number} →</Link>
+              </>
+            )}
+            {scan.pr_url && !scan.pr_number && (
+              <>
+                <span>·</span>
+                <Link href={scan.pr_url} target="_blank" className="text-[#00FF94] hover:underline">View Repository →</Link>
               </>
             )}
           </div>
@@ -259,27 +265,29 @@ export default function ScanDetailPage() {
         </div>
       </Card>
 
-      {/* Diff section */}
-      <Card className="bg-slate-900 border-slate-800">
-        <div className="p-4 border-b border-slate-800">
-          <h2 className="font-semibold text-white">Diff</h2>
-          <p className="text-slate-500 text-xs mt-0.5">Raw git diff for this pull request</p>
-        </div>
-        <div className="p-4">
-          {scan.diff ? (
-            <DiffViewer
-              diff={scan.diff}
-              highlightLines={allFindings.flatMap(f =>
-                f.line_start != null ? [f.line_start] : []
-              )}
-            />
-          ) : (
-            <p className="text-slate-500 text-sm">
-              Diff not stored for this scan. Future scans will include the full diff.
-            </p>
-          )}
-        </div>
-      </Card>
+      {/* Diff section - only for PR scans */}
+      {scan.pr_number && (
+        <Card className="bg-[#18181b] border-[#27272a]">
+          <div className="p-4 border-b border-[#27272a]">
+            <h2 className="font-semibold text-white">Diff</h2>
+            <p className="text-zinc-500 text-xs mt-0.5">Raw git diff for this pull request</p>
+          </div>
+          <div className="p-4">
+            {scan.diff ? (
+              <DiffViewer
+                diff={scan.diff}
+                highlightLines={allFindings.flatMap(f =>
+                  f.line_start != null ? [f.line_start] : []
+                )}
+              />
+            ) : (
+              <p className="text-zinc-500 text-sm">
+                Diff not stored for this scan. Future scans will include the full diff.
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
