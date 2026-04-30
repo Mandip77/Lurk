@@ -1,5 +1,6 @@
 ﻿'use client'
 
+import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -44,15 +45,15 @@ export function Navbar({ tier, fullName, avatarUrl, email, onMenuToggle }: Navba
             {tier.toUpperCase()}
           </Badge>
         )}
-        <div className="flex items-center gap-2.5 pl-3 border-l border-white/5">
-          <Avatar className="h-7 w-7 ring-1 ring-white/10">
+        <Link href="/profile" className="flex items-center gap-2.5 pl-3 border-l border-white/5 group">
+          <Avatar className="h-7 w-7 ring-1 ring-white/10 group-hover:ring-[#00FF94]/50 transition-all">
             <AvatarImage src={avatarUrl ?? ''} />
             <AvatarFallback className="bg-[#00FF94]/10 text-[#00FF94] text-xs font-semibold">
               {fullName?.[0]?.toUpperCase() ?? email?.[0]?.toUpperCase() ?? 'U'}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm text-slate-300 hidden sm:block">{fullName ?? email}</span>
-        </div>
+          <span className="text-sm text-slate-300 hidden sm:block group-hover:text-white transition-colors">{fullName ?? email}</span>
+        </Link>
       </div>
     </header>
   )

@@ -5,16 +5,17 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const nav = [
-  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/dashboard',    label: 'Dashboard',    icon: '📊' },
   { href: '/repositories', label: 'Repositories', icon: '📁' },
-  { href: '/scans', label: 'Scans', icon: '🔍' },
-  { href: '/usage', label: 'Usage', icon: '📈' },
-  { href: '/reports', label: 'Reports', icon: '📄' },
-  { href: '/pricing', label: 'Pricing', icon: '💳' },
-  { href: '/settings', label: 'Settings', icon: '⚙️' },
-  { href: '/referral', label: 'Referral', icon: '🎁' },
-  { href: '/api-keys', label: 'API Keys', icon: '🔑' },
-  { href: '/rules', label: 'Rules', icon: '📋' },
+  { href: '/scans',        label: 'Scans',        icon: '🔍' },
+  { href: '/usage',        label: 'Usage',        icon: '📈' },
+  { href: '/reports',      label: 'Reports',      icon: '📄' },
+  { href: '/pricing',      label: 'Pricing',      icon: '💳' },
+  { href: '/referral',     label: 'Referral',     icon: '🎁' },
+  { href: '/api-keys',     label: 'API Keys',     icon: '🔑' },
+  { href: '/rules',        label: 'Rules',        icon: '📋' },
+  { href: '/settings',     label: 'Settings',     icon: '⚙️' },
+  { href: '/profile',      label: 'Profile',      icon: '👤' },
 ]
 
 interface SidebarProps {

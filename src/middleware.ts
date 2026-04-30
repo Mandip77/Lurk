@@ -41,7 +41,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/api-keys') ||
     pathname.startsWith('/referral') ||
     pathname.startsWith('/rules') ||
-    pathname.startsWith('/usage')
+    pathname.startsWith('/usage') ||
+    pathname.startsWith('/profile')
 
   if (isProtected && !user) {
     const url = request.nextUrl.clone()
