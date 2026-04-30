@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import type { Scan } from '@/types'
 
@@ -11,12 +10,25 @@ type ScanWithRepo = Scan & { repositories: { full_name: string } | null }
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    queued: 'bg-slate-800 text-slate-400',
-    scanning: 'bg-blue-900 text-blue-300',
-    complete: 'bg-green-900 text-green-300',
-    failed: 'bg-red-900 text-red-300',
+    queued: 'bg-[#27272a] text-zinc-400',
+    scanning: 'bg-blue-950 text-blue-300',
+    complete: 'bg-green-950 text-green-400',
+    failed: 'bg-red-950 text-red-400',
   }
-  return <Badge className={styles[status] ?? styles.queued}>{status}</Badge>
+  const icons: Record<string, string> = {
+    queued: '⏳',
+    scanning: '🔍',
+    complete: '✅',
+    failed: '❌',
+  }
+  const isActive = status === 'queued' || status === 'scanning'
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${styles[status] ?? styles.queued}`}>
+      {isActive && <span className="w-2 h-2 rounded-full border border-current border-t-transparent animate-spin" />}
+      {!isActive && <span>{icons[status]}</span>}
+      {status}
+    </span>
+  )
 }
 
 function ScoreChip({ score }: { score: number }) {
@@ -39,13 +51,41 @@ interface ScansClientProps {
   scans: ScanWithRepo[]
 }
 
-export function ScansClient({ scans }: ScansClientProps) {
+export function ScansClient({ scans: initialScans }: ScansClientProps) {
+  const [scans, setScans] = useState<ScanWithRepo[]>(initialScans)
   const [search, setSearch] = useState('')
   const [severity, setSeverity] = useState<SeverityFilter>('all')
   const [status, setStatus] = useState<StatusFilter>('all')
   const [dateRange, setDateRange] = useState<DateFilter>('all')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [deleting, setDeleting] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Poll active scans every 4s and update their status live
+  useEffect(() => {
+    const activeIds = scans.filter(s => s.status === 'queued' || s.status === 'scanning').map(s => s.id)
+    if (activeIds.length === 0) return
+
+    async function poll() {
+      const updates = await Promise.all(
+        activeIds.map(id =>
+          fetch(`/api/scans/${id}`).then(r => r.ok ? r.json() : null).catch(() => null)
+        )
+      )
+      setScans(prev => prev.map(s => {
+        const update = updates.find(u => u?.scan?.id === s.id)
+        return update ? { ...s, ...update.scan } : s
+      }))
+    }
+
+    timerRef.current = setTimeout(async function repeat() {
+      await poll()
+      const stillActive = scans.filter(s => s.status === 'queued' || s.status === 'scanning').length
+      if (stillActive > 0) timerRef.current = setTimeout(repeat, 4000)
+    }, 4000)
+
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [scans.map(s => s.status).join(',')]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const isFiltered =
     search !== '' || severity !== 'all' || status !== 'all' || dateRange !== 'all'
@@ -124,21 +164,23 @@ export function ScansClient({ scans }: ScansClientProps) {
     if (selected.size === 0) return
     setDeleting(true)
     try {
-      await fetch('/api/scans/bulk-delete', {
+      const res = await fetch('/api/scans/bulk-delete', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: Array.from(selected) }),
       })
-      setSelected(new Set())
-      // Reload to reflect changes
-      window.location.reload()
+      if (res.ok) {
+        const deletedIds = new Set(selected)
+        setScans(prev => prev.filter(s => !deletedIds.has(s.id)))
+        setSelected(new Set())
+      }
     } finally {
       setDeleting(false)
     }
   }
 
   const selectClassName =
-    'bg-slate-900 border border-slate-700 text-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00FF94] transition-colors'
+    'bg-[#18181b] border border-[#3f3f46] text-zinc-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00FF94] transition-colors'
 
   return (
     <div className="space-y-4">
@@ -214,7 +256,7 @@ export function ScansClient({ scans }: ScansClientProps) {
       </div>
 
       {/* Table */}
-      <Card className="bg-slate-900 border-slate-800">
+      <Card className="bg-[#18181b] border-[#27272a]">
         {filtered.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-slate-500 text-lg mb-2">No results found</p>
@@ -235,7 +277,7 @@ export function ScansClient({ scans }: ScansClientProps) {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b border-slate-800 text-left">
+              <tr className="border-b border-[#27272a] text-left">
                 <th className="p-4 w-10">
                   <input
                     type="checkbox"
@@ -244,17 +286,17 @@ export function ScansClient({ scans }: ScansClientProps) {
                     className="rounded border-slate-700 bg-slate-800 accent-[#00FF94]"
                   />
                 </th>
-                <th className="p-4 text-slate-400 text-sm font-medium">PR / Repository</th>
-                <th className="p-4 text-slate-400 text-sm font-medium">Score</th>
-                <th className="p-4 text-slate-400 text-sm font-medium">Status</th>
-                <th className="p-4 text-slate-400 text-sm font-medium">Date</th>
+                <th className="p-4 text-zinc-400 text-sm font-medium">PR / Repository</th>
+                <th className="p-4 text-zinc-400 text-sm font-medium">Score</th>
+                <th className="p-4 text-zinc-400 text-sm font-medium">Status</th>
+                <th className="p-4 text-zinc-400 text-sm font-medium">Date</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800">
+            <tbody className="divide-y divide-[#27272a]">
               {filtered.map(scan => (
                 <tr
                   key={scan.id}
-                  className={`hover:bg-slate-800/50 transition-colors ${
+                  className={`hover:bg-[#27272a]/50 transition-colors ${
                     selected.has(scan.id) ? 'bg-slate-800/30' : ''
                   }`}
                 >
