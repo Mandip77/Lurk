@@ -31,6 +31,14 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   output: process.env.DOCKER_BUILD === '1' ? 'standalone' : undefined,
+  // Keep these packages out of the webpack/Turbopack bundle entirely.
+  // They are required at runtime from node_modules, which prevents the SDK
+  // constructors from being evaluated during static generation or page load.
+  serverExternalPackages: [
+    '@anthropic-ai/sdk',
+    '@octokit/auth-app',
+    '@octokit/rest',
+  ],
   async headers() {
     return [{ source: '/(.*)', headers: securityHeaders }]
   },
