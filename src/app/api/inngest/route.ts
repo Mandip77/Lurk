@@ -1,8 +1,9 @@
 import { serve } from 'inngest/next'
 import { inngest } from '@/inngest/client'
 import { scanPullRequest } from '@/inngest/functions/scan-pull-request'
+import { weeklyDigest } from '@/inngest/functions/weekly-digest'
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scanPullRequest],
+  functions: [scanPullRequest, weeklyDigest],
 })

@@ -1,12 +1,38 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SeverityBadge } from '@/components/dashboard/SeverityBadge'
 import { GenerateReportButton } from '@/components/dashboard/GenerateReportButton'
 import { ScanStatusPoller } from '@/components/dashboard/ScanStatusPoller'
+import { SuppressButton } from '@/components/dashboard/SuppressButton'
+import { DiffViewer } from '@/components/dashboard/DiffViewer'
 import type { Finding, FindingSeverity } from '@/types'
+
+interface ScanWithRepo {
+  id: string
+  pr_number: number | null
+  pr_title: string | null
+  pr_author: string | null
+  pr_url: string | null
+  status: string
+  severity_score: number
+  tokens_used: number
+  created_at: string
+  completed_at: string | null
+  model_used: string | null
+  diff: string | null
+  repositories: { full_name: string } | null
+}
+
+interface FindingWithSuppress extends Finding {
+  suppressed?: boolean
+  suppressed_reason?: string | null
+  suppressed_at?: string | null
+}
 
 function ScoreGauge({ score }: { score: number }) {
   const color = score >= 75 ? '#ef4444' : score >= 50 ? '#f97316' : score >= 25 ? '#eab308' : '#00FF94'
@@ -30,37 +56,75 @@ const categoryLabel: Record<string, string> = {
   other: 'Other',
 }
 
-export default async function ScanDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+export default function ScanDetailPage() {
+  const params = useParams()
+  const router = useRouter()
+  const id = params.id as string
 
-  const [{ data: scan }, { data: profile }] = await Promise.all([
-    supabase
-      .from('scans')
-      .select('*, repositories(*)')
-      .eq('id', id)
-      .eq('user_id', user.id) // ownership check — prevents IDOR
-      .single(),
-    supabase.from('users').select('tier').eq('id', user.id).single(),
-  ])
+  const [scan, setScan] = useState<ScanWithRepo | null>(null)
+  const [findings, setFindings] = useState<FindingWithSuppress[]>([])
+  const [userTier, setUserTier] = useState<string>('free')
+  const [loading, setLoading] = useState(true)
+  const [showSuppressed, setShowSuppressed] = useState(false)
 
-  if (!scan) notFound()
+  useEffect(() => {
+    async function load() {
+      const [scanRes, findingsRes, profileRes] = await Promise.all([
+        fetch(`/api/scans/${id}`),
+        fetch(`/api/scans/${id}/findings`),
+        fetch('/api/profile'),
+      ])
 
-  const { data: findings } = await supabase
-    .from('findings')
-    .select('*')
-    .eq('scan_id', id)
-    .eq('user_id', user.id) // ownership check on findings too
-    .order('severity', { ascending: true })
+      if (scanRes.status === 401) { router.push('/login'); return }
+      if (scanRes.status === 404) { router.push('/404'); return }
 
-  const userTier = profile?.tier ?? 'free'
+      if (scanRes.ok) {
+        const data = await scanRes.json()
+        setScan(data.scan)
+      }
+      if (findingsRes.ok) {
+        const data = await findingsRes.json()
+        setFindings(data.findings ?? [])
+      }
+      if (profileRes.ok) {
+        const data = await profileRes.json()
+        setUserTier(data.tier ?? 'free')
+      }
+      setLoading(false)
+    }
+    load()
+  }, [id, router])
 
-  const bySeverity = (findings ?? []).reduce((acc: Record<string, number>, f: Finding) => {
-    acc[f.severity] = (acc[f.severity] ?? 0) + 1
-    return acc
-  }, {})
+  function updateFindingSuppressed(findingId: string, suppressed: boolean) {
+    setFindings(prev =>
+      prev.map(f => f.id === findingId ? { ...f, suppressed } : f)
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Link href="/scans" className="text-slate-400 hover:text-white text-sm">← Back to Scans</Link>
+        <p className="text-slate-400">Loading…</p>
+      </div>
+    )
+  }
+
+  if (!scan) return null
+
+  const allFindings = findings ?? []
+  const visibleFindings = showSuppressed
+    ? allFindings
+    : allFindings.filter(f => !f.suppressed)
+
+  const suppressedCount = allFindings.filter(f => f.suppressed).length
+
+  const bySeverity = allFindings
+    .filter(f => !f.suppressed)
+    .reduce((acc: Record<string, number>, f: FindingWithSuppress) => {
+      acc[f.severity] = (acc[f.severity] ?? 0) + 1
+      return acc
+    }, {})
 
   return (
     <div className="space-y-6">
@@ -87,7 +151,7 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
           </div>
           <div className="mt-3">
             {(scan.status === 'queued' || scan.status === 'scanning') ? (
-              <ScanStatusPoller scanId={scan.id} initialStatus={scan.status} />
+              <ScanStatusPoller scanId={scan.id} initialStatus={scan.status as 'queued' | 'scanning'} />
             ) : scan.status === 'complete' ? (
               <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/60 text-green-300 text-sm font-medium">
                 ✅ Complete
@@ -114,25 +178,55 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
       </div>
 
       <Card className="bg-slate-900 border-slate-800">
-        <div className="p-4 border-b border-slate-800">
-          <h2 className="font-semibold text-white">Findings ({findings?.length ?? 0})</h2>
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between flex-wrap gap-3">
+          <h2 className="font-semibold text-white">
+            Findings ({allFindings.length}
+            {suppressedCount > 0 ? `, ${suppressedCount} suppressed` : ''})
+          </h2>
+          {suppressedCount > 0 && (
+            <button
+              onClick={() => setShowSuppressed(s => !s)}
+              className="text-sm text-slate-400 hover:text-white transition-colors"
+            >
+              {showSuppressed ? 'Hide suppressed' : `Show ${suppressedCount} suppressed`}
+            </button>
+          )}
         </div>
         <div className="divide-y divide-slate-800">
-          {(findings ?? []).length === 0 ? (
+          {visibleFindings.length === 0 ? (
             <div className="p-8 text-center text-slate-400">
               <p className="text-2xl mb-2">✅</p>
               <p>No security vulnerabilities found.</p>
             </div>
           ) : (
-            (findings ?? []).map((f: Finding) => (
-              <div key={f.id} className="p-4 space-y-2">
+            visibleFindings.map((f: FindingWithSuppress) => (
+              <div
+                key={f.id}
+                className={`p-4 space-y-2 transition-opacity ${f.suppressed ? 'opacity-40' : ''}`}
+              >
                 <div className="flex items-center gap-2 flex-wrap">
                   <SeverityBadge severity={f.severity} />
                   <Badge variant="outline" className="border-slate-700 text-slate-400 text-xs">
                     {categoryLabel[f.category] ?? f.category}
                   </Badge>
                   <span className="text-white font-medium">{f.title}</span>
+                  {f.suppressed && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-700 text-slate-400 text-xs font-medium">
+                      Suppressed
+                    </span>
+                  )}
+                  <div className="ml-auto">
+                    <SuppressButton
+                      findingId={f.id}
+                      initialSuppressed={f.suppressed ?? false}
+                      initialReason={f.suppressed_reason}
+                      onUpdate={(s) => updateFindingSuppressed(f.id, s)}
+                    />
+                  </div>
                 </div>
+                {f.suppressed_reason && (
+                  <p className="text-slate-500 text-xs italic">Suppressed: {f.suppressed_reason}</p>
+                )}
                 {f.file_path && (
                   <p className="text-slate-400 text-sm font-mono">
                     {f.file_path}{f.line_start ? `:${f.line_start}` : ''}
@@ -161,6 +255,28 @@ export default async function ScanDetailPage({ params }: { params: Promise<{ id:
                 )}
               </div>
             ))
+          )}
+        </div>
+      </Card>
+
+      {/* Diff section */}
+      <Card className="bg-slate-900 border-slate-800">
+        <div className="p-4 border-b border-slate-800">
+          <h2 className="font-semibold text-white">Diff</h2>
+          <p className="text-slate-500 text-xs mt-0.5">Raw git diff for this pull request</p>
+        </div>
+        <div className="p-4">
+          {scan.diff ? (
+            <DiffViewer
+              diff={scan.diff}
+              highlightLines={allFindings.flatMap(f =>
+                f.line_start != null ? [f.line_start] : []
+              )}
+            />
+          ) : (
+            <p className="text-slate-500 text-sm">
+              Diff not stored for this scan. Future scans will include the full diff.
+            </p>
           )}
         </div>
       </Card>

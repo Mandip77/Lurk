@@ -71,6 +71,52 @@ export default async function DashboardPage() {
   const hasRepo = (repos?.length ?? 0) > 0
   const hasScan = totalScans > 0
 
+  // Riskiest repo: group by repo, calc avg severity_score
+  const repoScoreMap: Record<string, { name: string; total: number; count: number }> = {}
+  for (const scan of scans) {
+    const repoName = scan.repositories?.full_name ?? 'Unknown'
+    const key = scan.repository_id
+    if (!repoScoreMap[key]) repoScoreMap[key] = { name: repoName, total: 0, count: 0 }
+    repoScoreMap[key].total += scan.severity_score
+    repoScoreMap[key].count += 1
+  }
+  const repoEntries = Object.values(repoScoreMap)
+  const riskiestRepo =
+    repoEntries.length > 0
+      ? repoEntries.reduce((a, b) => a.total / a.count > b.total / b.count ? a : b)
+      : null
+  const riskiestAvg = riskiestRepo
+    ? Math.round(riskiestRepo.total / riskiestRepo.count)
+    : 0
+  const riskiestColor =
+    riskiestAvg >= 75
+      ? 'text-red-400'
+      : riskiestAvg >= 50
+      ? 'text-orange-400'
+      : riskiestAvg >= 25
+      ? 'text-yellow-400'
+      : 'text-green-400'
+
+  // Most common vulnerability categories
+  const categoryCount: Record<string, number> = {}
+  for (const scan of scans) {
+    for (const f of scan.findings ?? []) {
+      const cat = (f as { category: string }).category ?? 'other'
+      categoryCount[cat] = (categoryCount[cat] ?? 0) + 1
+    }
+  }
+  const categoryLabels: Record<string, string> = {
+    rls_misconfiguration: 'RLS Misconfiguration',
+    broken_auth: 'Broken Auth',
+    supply_chain: 'Supply Chain',
+    prompt_injection: 'Prompt Injection',
+    other: 'Other',
+  }
+  const topCategories = Object.entries(categoryCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+  const maxCatCount = topCategories[0]?.[1] ?? 1
+
   return (
     <div className="space-y-6">
       <div>
@@ -112,6 +158,67 @@ export default async function DashboardPage() {
           </p>
         </Card>
       )}
+
+      {/* Riskiest Repo + Most Common Vulnerability */}
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="bg-slate-900 border-slate-800 p-5">
+          <p className="text-slate-400 text-sm font-medium mb-3">Riskiest Repository</p>
+          {riskiestRepo ? (
+            <div className="space-y-2">
+              <p className="text-white font-semibold truncate">{riskiestRepo.name}</p>
+              <div className="flex items-center gap-3">
+                <span className={`text-3xl font-bold font-mono ${riskiestColor}`}>
+                  {riskiestAvg}
+                </span>
+                <span className="text-slate-500 text-sm">avg score</span>
+                <span className="text-slate-600 text-xs ml-auto">
+                  {riskiestRepo.count} {riskiestRepo.count === 1 ? 'scan' : 'scans'}
+                </span>
+              </div>
+              <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${
+                    riskiestAvg >= 75
+                      ? 'bg-red-500'
+                      : riskiestAvg >= 50
+                      ? 'bg-orange-500'
+                      : riskiestAvg >= 25
+                      ? 'bg-yellow-500'
+                      : 'bg-green-500'
+                  }`}
+                  style={{ width: `${riskiestAvg}%` }}
+                />
+              </div>
+            </div>
+          ) : (
+            <p className="text-slate-600 text-sm">No data yet</p>
+          )}
+        </Card>
+
+        <Card className="bg-slate-900 border-slate-800 p-5">
+          <p className="text-slate-400 text-sm font-medium mb-3">Most Common Vulnerabilities</p>
+          {topCategories.length > 0 ? (
+            <div className="space-y-3">
+              {topCategories.map(([cat, count]) => (
+                <div key={cat} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-300">{categoryLabels[cat] ?? cat}</span>
+                    <span className="text-slate-500 font-mono">{count}</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#00FF94]/70 rounded-full transition-all"
+                      style={{ width: `${Math.round((count / maxCatCount) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-slate-600 text-sm">No findings data yet</p>
+          )}
+        </Card>
+      </div>
 
       {/* Vulnerability Trend */}
       <Card className="bg-slate-900 border-slate-800">

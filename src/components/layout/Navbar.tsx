@@ -2,6 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import type { UserTier } from '@/types'
 
 const tierColors: Record<UserTier, string> = {
@@ -37,6 +38,7 @@ export function Navbar({ tier, fullName, avatarUrl, email, onMenuToggle }: Navba
       </div>
 
       <div className="flex items-center gap-3 ml-auto">
+        <ThemeToggle />
         {tier && (
           <Badge className={`${tierColors[tier]} text-xs font-medium`}>
             {tier.toUpperCase()}

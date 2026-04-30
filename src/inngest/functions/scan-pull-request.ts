@@ -125,6 +125,15 @@ export const scanPullRequest = inngest.createFunction(
       return data
     })
 
+    const customRules = await step.run('fetch-custom-rules', async () => {
+      const { data } = await supabase
+        .from('custom_rules')
+        .select('name, pattern, severity, description')
+        .eq('user_id', scan.user_id)
+        .eq('is_active', true)
+      return data ?? []
+    })
+
     const diff = await step.run('fetch-diff', async () => {
       const repo = scan.repositories
       if (!repo.installation_id) throw new Error('No installation ID')
@@ -143,10 +152,21 @@ export const scanPullRequest = inngest.createFunction(
     const { findings, tokensUsed } = await step.run('ai-analysis', async (): Promise<{ findings: ClaudeFinding[]; tokensUsed: number }> => {
       const { default: Anthropic } = await import('@anthropic-ai/sdk')
       const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! })
+
+      let systemPrompt = SYSTEM_PROMPT
+      if (customRules.length > 0) {
+        const rulesSection = customRules
+          .map((r: { name: string; pattern: string; severity: string; description: string | null }) =>
+            `- ${r.name}: ${r.pattern} → severity: ${r.severity}${r.description ? ` — ${r.description}` : ''}`
+          )
+          .join('\n')
+        systemPrompt += `\n\nCUSTOM RULES (flag these patterns specifically):\n${rulesSection}`
+      }
+
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5',
         max_tokens: 4096,
-        system: SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [{ role: 'user', content: `Analyze this PR diff:\n\n${diff}` }],
       })
 

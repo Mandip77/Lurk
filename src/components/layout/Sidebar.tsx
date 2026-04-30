@@ -12,6 +12,9 @@ const nav = [
   { href: '/reports', label: 'Reports', icon: '📄' },
   { href: '/pricing', label: 'Pricing', icon: '💳' },
   { href: '/settings', label: 'Settings', icon: '⚙️' },
+  { href: '/referral', label: 'Referral', icon: '🎁' },
+  { href: '/api-keys', label: 'API Keys', icon: '🔑' },
+  { href: '/rules', label: 'Rules', icon: '📋' },
 ]
 
 interface SidebarProps {
