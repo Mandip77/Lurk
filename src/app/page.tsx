@@ -221,7 +221,7 @@ export default function LandingPage() {
               },
               {
                 name: 'Agency',
-                price: '$99',
+                price: '$70',
                 per: 'per month',
                 desc: 'For teams and consultants',
                 features: ['Everything in Pro', 'White-label web reports', 'Shareable report links', 'PDF export (self-hosted)', 'Team seats'],

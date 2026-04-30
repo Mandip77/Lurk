@@ -39,7 +39,7 @@ const plans = [
   },
   {
     name: 'Agency',
-    price: '$99',
+    price: '$70',
     period: 'per month',
     description: 'For teams and security consultants',
     features: [
