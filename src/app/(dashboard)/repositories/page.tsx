@@ -91,14 +91,16 @@ export default function RepositoriesPage() {
           >
             {syncing ? 'Syncing...' : 'Sync Repos'}
           </Button>
-          <a
-            href={installUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center px-4 py-2 rounded-lg bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium text-sm transition-colors"
-          >
-            + Install GitHub App
-          </a>
+          {repos.length === 0 && (
+            <a
+              href={installUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center px-4 py-2 rounded-lg bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium text-sm transition-colors"
+            >
+              + Install GitHub App
+            </a>
+          )}
         </div>
       </div>
 
@@ -141,7 +143,7 @@ export default function RepositoriesPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <p className="text-slate-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - toggle scanning on/off per repo below.</p>
+          <p className="text-slate-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - enable scanning on the repos you want Lurk to watch.</p>
           {repos.map(repo => (
             <Card key={repo.id} className="bg-slate-900 border-slate-800 p-4 flex items-center justify-between">
               <div className="min-w-0">

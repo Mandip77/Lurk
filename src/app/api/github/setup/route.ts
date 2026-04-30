@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
           provider_repo_id: String(r.id),
           full_name: r.full_name,
           provider: 'github',
-          is_active: true,
+          is_active: false,
           webhook_secret: crypto.randomUUID(),
         }))
 

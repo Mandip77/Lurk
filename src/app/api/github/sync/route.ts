@@ -57,13 +57,13 @@ export async function POST() {
           provider_repo_id: String(r.id),
           full_name: r.full_name,
           provider: 'github',
-          is_active: true,
+          is_active: false,
           webhook_secret: crypto.randomUUID(),
         }))
 
         const { error } = await service
           .from('repositories')
-          .upsert(rows, { onConflict: 'user_id,provider,provider_repo_id' })
+          .upsert(rows, { onConflict: 'user_id,provider,provider_repo_id', ignoreDuplicates: true })
 
         if (!error) totalSynced += rows.length
       }

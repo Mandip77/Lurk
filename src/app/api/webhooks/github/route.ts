@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         provider_repo_id: String(r.id),
         full_name: r.full_name,
         provider: 'github',
-        is_active: true,
+        is_active: false,
         webhook_secret: crypto.randomUUID(),
       }))
       await supabase.from('repositories').upsert(rows, { onConflict: 'user_id,provider,provider_repo_id' })
@@ -123,11 +123,7 @@ export async function POST(req: NextRequest) {
 
   if (!repo) return NextResponse.json({ ok: true })
 
-  // Verify per-repo HMAC (each repo can have its own webhook secret)
-  if (!hmacMatches(body, signature, repo.webhook_secret)) {
-    return new NextResponse('Unauthorized', { status: 401 })
-  }
-
+  // Global HMAC already validated above - no per-repo check needed for GitHub App webhooks
   const user = repo.users
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://lurk.dev'
 
