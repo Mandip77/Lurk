@@ -93,7 +93,7 @@ export default function LandingPage() {
                 <p className="text-slate-500 text-xs">File: <span className="text-slate-400">src/lib/auth.ts</span> · Line 34</p>
               </div>
               <div className="border-t border-white/5 my-3" />
-              <p className="text-[#00FF94] text-xs">View full report → lurk.dev/scans/abc123</p>
+              <p className="text-[#00FF94] text-xs">View full report → lurk-cyan.vercel.app/scans/abc123</p>
             </div>
           </div>
         </div>
