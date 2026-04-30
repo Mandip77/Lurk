@@ -49,9 +49,11 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    return NextResponse.redirect(`${origin}/repositories?synced=1`)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin
+    return NextResponse.redirect(`${appUrl}/repositories?synced=1`)
   } catch (err) {
     console.error('GitHub setup callback error:', err)
-    return NextResponse.redirect(`${origin}/repositories?error=sync_failed`)
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? origin
+    return NextResponse.redirect(`${appUrl}/repositories?error=sync_failed`)
   }
 }

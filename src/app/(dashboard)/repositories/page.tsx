@@ -1,57 +1,167 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState, useCallback } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 import { Card } from '@/components/ui/card'
-import { LinkButton } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
-export default async function RepositoriesPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+interface Repo {
+  id: string
+  full_name: string
+  provider: string
+  is_active: boolean
+  installation_id: string | null
+  created_at: string
+}
 
-  const { data: repos } = await supabase
-    .from('repositories')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(100)
-
+export default function RepositoriesPage() {
+  const searchParams = useSearchParams()
+  const [repos, setRepos] = useState<Repo[]>([])
+  const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
   const installUrl = process.env.NEXT_PUBLIC_GITHUB_APP_INSTALL_URL ?? '#'
+
+  const loadRepos = useCallback(async () => {
+    const supabase = createClient()
+    const { data } = await supabase
+      .from('repositories')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100)
+    setRepos(data ?? [])
+    setLoading(false)
+  }, [])
+
+  useEffect(() => {
+    loadRepos()
+    // If redirected back from GitHub installation, show synced message
+    if (searchParams.get('synced') === '1') {
+      setSyncMsg('Repositories synced successfully!')
+      setTimeout(() => setSyncMsg(''), 4000)
+    }
+    if (searchParams.get('error')) {
+      setSyncMsg('Sync failed - try the Sync button below.')
+      setTimeout(() => setSyncMsg(''), 5000)
+    }
+  }, [loadRepos, searchParams])
+
+  async function syncRepos() {
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/github/sync', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setSyncMsg(`Synced ${data.count} repository${data.count !== 1 ? 'ies' : 'y'}.`)
+        await loadRepos()
+      } else {
+        setSyncMsg(data.error ?? 'Sync failed. Make sure the GitHub App is installed.')
+      }
+    } catch {
+      setSyncMsg('Sync failed. Check your connection and try again.')
+    }
+    setSyncing(false)
+    setTimeout(() => setSyncMsg(''), 5000)
+  }
+
+  async function toggleRepo(repoId: string, currentActive: boolean) {
+    const supabase = createClient()
+    await supabase
+      .from('repositories')
+      .update({ is_active: !currentActive })
+      .eq('id', repoId)
+    setRepos(r => r.map(repo => repo.id === repoId ? { ...repo, is_active: !currentActive } : repo))
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Repositories</h1>
-          <p className="text-slate-400 mt-1">Manage connected repositories</p>
+          <p className="text-slate-400 mt-1">Manage which repositories Lurk scans</p>
         </div>
-        <LinkButton href={installUrl} target="_blank" rel="noreferrer" className="bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium">
-          + Install GitHub App
-        </LinkButton>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={syncRepos}
+            disabled={syncing}
+            variant="outline"
+            className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-sm"
+          >
+            {syncing ? 'Syncing...' : 'Sync Repos'}
+          </Button>
+          <a
+            href={installUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center px-4 py-2 rounded-lg bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium text-sm transition-colors"
+          >
+            + Install GitHub App
+          </a>
+        </div>
       </div>
 
-      {(repos?.length ?? 0) === 0 ? (
+      {syncMsg && (
+        <div className={`text-sm px-4 py-3 rounded-lg ${syncMsg.includes('fail') || syncMsg.includes('Check') ? 'bg-red-900/30 text-red-300 border border-red-800' : 'bg-[#00FF94]/10 text-[#00FF94] border border-[#00FF94]/30'}`}>
+          {syncMsg}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center h-48">
+          <div className="w-6 h-6 border-2 border-[#00FF94] border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : repos.length === 0 ? (
         <Card className="bg-slate-900 border-slate-800 p-12 text-center">
           <div className="text-4xl mb-4">📁</div>
           <h2 className="text-white font-semibold text-lg">No repositories connected</h2>
-          <p className="text-slate-400 mt-2 mb-6">Install the Lurk GitHub App to start scanning pull requests automatically.</p>
-          <LinkButton href={installUrl} target="_blank" rel="noreferrer" className="bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium">
-            Install GitHub App
-          </LinkButton>
+          <p className="text-slate-400 mt-2 mb-2 max-w-sm mx-auto">
+            Install the Lurk GitHub App on your repositories, then click <strong className="text-white">Sync Repos</strong> to load them here.
+          </p>
+          <p className="text-slate-500 text-sm mb-6">Lurk will then automatically scan every pull request for security issues.</p>
+          <div className="flex items-center justify-center gap-3">
+            <a
+              href={installUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center px-5 py-2.5 rounded-lg bg-[#00FF94] text-black hover:bg-[#00DD80] font-medium text-sm transition-colors"
+            >
+              Install GitHub App
+            </a>
+            <Button
+              onClick={syncRepos}
+              disabled={syncing}
+              variant="outline"
+              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-sm"
+            >
+              {syncing ? 'Syncing...' : 'Sync Repos'}
+            </Button>
+          </div>
         </Card>
       ) : (
         <div className="space-y-3">
-          {repos!.map(repo => (
+          <p className="text-slate-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - toggle scanning on/off per repo below.</p>
+          {repos.map(repo => (
             <Card key={repo.id} className="bg-slate-900 border-slate-800 p-4 flex items-center justify-between">
-              <div>
-                <p className="text-white font-medium">{repo.full_name}</p>
-                <p className="text-slate-400 text-sm mt-0.5">
+              <div className="min-w-0">
+                <p className="text-white font-medium truncate">{repo.full_name}</p>
+                <p className="text-slate-500 text-xs mt-0.5">
                   {repo.provider} · Added {new Date(repo.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <Badge className={repo.is_active ? 'bg-green-900 text-green-300' : 'bg-slate-700 text-slate-400'}>
-                {repo.is_active ? 'Active' : 'Inactive'}
-              </Badge>
+              <div className="flex items-center gap-3 shrink-0 ml-4">
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${repo.is_active ? 'bg-[#00FF94]/10 text-[#00FF94]' : 'bg-slate-800 text-slate-500'}`}>
+                  {repo.is_active ? 'Scanning' : 'Paused'}
+                </span>
+                <button
+                  onClick={() => toggleRepo(repo.id, repo.is_active)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${repo.is_active ? 'bg-[#00FF94]' : 'bg-slate-700'}`}
+                  aria-label={repo.is_active ? 'Pause scanning' : 'Enable scanning'}
+                >
+                  <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${repo.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+              </div>
             </Card>
           ))}
         </div>
