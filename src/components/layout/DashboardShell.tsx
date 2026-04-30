@@ -17,7 +17,7 @@ export function DashboardShell({ children, tier, fullName, avatarUrl, email }: D
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-[#0B1120] text-white overflow-hidden">
+    <div className="flex h-screen bg-[#09090b] text-white overflow-hidden">
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <Navbar

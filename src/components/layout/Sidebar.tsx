@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -27,8 +27,8 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
 
   const sidebarContent = (
-    <aside className="w-56 shrink-0 bg-[#080f1e] border-r border-white/5 flex flex-col h-full">
-      <div className="p-4 border-b border-white/5">
+    <aside className="w-56 shrink-0 bg-[#111113] border-r border-[#27272a] flex flex-col h-full">
+      <div className="p-4 border-b border-[#27272a]">
         <Link href="/dashboard" className="flex items-center gap-2.5 group" onClick={onClose}>
           <div className="w-7 h-7 rounded-lg bg-[#00FF94]/10 border border-[#00FF94]/30 flex items-center justify-center text-sm transition-all duration-200 group-hover:bg-[#00FF94]/20 group-hover:scale-110">
             👁️
@@ -49,7 +49,7 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
                 'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 relative group',
                 active
                   ? 'bg-[#00FF94]/10 text-[#00FF94]'
-                  : 'text-slate-400 hover:text-white hover:bg-white/5'
+                  : 'text-zinc-400 hover:text-white hover:bg-[#27272a]'
               )}
             >
               {active && (
@@ -64,11 +64,11 @@ export function Sidebar({ mobileOpen = false, onClose }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-3 border-t border-white/5">
+      <div className="p-3 border-t border-[#27272a]">
         <Link
           href="/"
           onClick={onClose}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-slate-600 hover:text-slate-400 transition-colors duration-150"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-zinc-600 hover:text-zinc-400 transition-colors duration-150"
         >
           ← Back to site
         </Link>

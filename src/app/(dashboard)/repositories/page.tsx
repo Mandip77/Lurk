@@ -21,6 +21,7 @@ export default function RepositoriesPage() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
+  const [scanning, setScanning] = useState<string | null>(null)
   const installUrl = process.env.NEXT_PUBLIC_GITHUB_APP_INSTALL_URL ?? '#'
 
   const loadRepos = useCallback(async () => {
@@ -75,19 +76,35 @@ export default function RepositoriesPage() {
     setRepos(r => r.map(repo => repo.id === repoId ? { ...repo, is_active: !currentActive } : repo))
   }
 
+  async function scanRepo(repoId: string) {
+    setScanning(repoId)
+    const res = await fetch('/api/scan-repo', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repositoryId: repoId }),
+    })
+    const data = await res.json()
+    setScanning(null)
+    if (data.scanId) {
+      window.location.href = `/scans/${data.scanId}`
+    } else {
+      alert(data.error ?? 'Failed to start scan')
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Repositories</h1>
-          <p className="text-slate-400 mt-1">Manage which repositories Lurk scans</p>
+          <p className="text-zinc-400 mt-1">Manage which repositories Lurk scans</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             onClick={syncRepos}
             disabled={syncing}
             variant="outline"
-            className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-sm"
+            className="border-zinc-700 text-zinc-300 hover:bg-[#27272a] hover:text-white text-sm"
           >
             {syncing ? 'Syncing...' : 'Sync Repos'}
           </Button>
@@ -115,13 +132,13 @@ export default function RepositoriesPage() {
           <div className="w-6 h-6 border-2 border-[#00FF94] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : repos.length === 0 ? (
-        <Card className="bg-slate-900 border-slate-800 p-12 text-center">
+        <Card className="bg-[#18181b] border-[#27272a] p-12 text-center">
           <div className="text-4xl mb-4">📁</div>
           <h2 className="text-white font-semibold text-lg">No repositories connected</h2>
-          <p className="text-slate-400 mt-2 mb-2 max-w-sm mx-auto">
+          <p className="text-zinc-400 mt-2 mb-2 max-w-sm mx-auto">
             Install the Lurk GitHub App on your repositories, then click <strong className="text-white">Sync Repos</strong> to load them here.
           </p>
-          <p className="text-slate-500 text-sm mb-6">Lurk will then automatically scan every pull request for security issues.</p>
+          <p className="text-zinc-500 text-sm mb-6">Lurk will then automatically scan every pull request for security issues.</p>
           <div className="flex items-center justify-center gap-3">
             <a
               href={installUrl}
@@ -135,7 +152,7 @@ export default function RepositoriesPage() {
               onClick={syncRepos}
               disabled={syncing}
               variant="outline"
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-sm"
+              className="border-zinc-700 text-zinc-300 hover:bg-[#27272a] hover:text-white text-sm"
             >
               {syncing ? 'Syncing...' : 'Sync Repos'}
             </Button>
@@ -143,22 +160,31 @@ export default function RepositoriesPage() {
         </Card>
       ) : (
         <div className="space-y-3">
-          <p className="text-slate-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - enable scanning on the repos you want Lurk to watch.</p>
+          <p className="text-zinc-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - enable scanning on the repos you want Lurk to watch.</p>
           {repos.map(repo => (
-            <Card key={repo.id} className="bg-slate-900 border-slate-800 p-4 flex items-center justify-between">
+            <Card key={repo.id} className="bg-[#18181b] border-[#27272a] p-4 flex items-center justify-between">
               <div className="min-w-0">
                 <p className="text-white font-medium truncate">{repo.full_name}</p>
-                <p className="text-slate-500 text-xs mt-0.5">
+                <p className="text-zinc-500 text-xs mt-0.5">
                   {repo.provider} · Added {new Date(repo.created_at).toLocaleDateString()}
                 </p>
               </div>
               <div className="flex items-center gap-3 shrink-0 ml-4">
-                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${repo.is_active ? 'bg-[#00FF94]/10 text-[#00FF94]' : 'bg-slate-800 text-slate-500'}`}>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${repo.is_active ? 'bg-[#00FF94]/10 text-[#00FF94]' : 'bg-[#27272a] text-zinc-500'}`}>
                   {repo.is_active ? 'Scanning' : 'Paused'}
                 </span>
+                {repo.is_active && (
+                  <button
+                    onClick={() => scanRepo(repo.id)}
+                    disabled={scanning === repo.id}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-[#00FF94]/10 text-[#00FF94] hover:bg-[#00FF94]/20 border border-[#00FF94]/20 transition-colors font-medium disabled:opacity-50"
+                  >
+                    {scanning === repo.id ? 'Starting...' : 'Scan Codebase'}
+                  </button>
+                )}
                 <button
                   onClick={() => toggleRepo(repo.id, repo.is_active)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${repo.is_active ? 'bg-[#00FF94]' : 'bg-slate-700'}`}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${repo.is_active ? 'bg-[#00FF94]' : 'bg-zinc-700'}`}
                   aria-label={repo.is_active ? 'Pause scanning' : 'Enable scanning'}
                 >
                   <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform duration-200 ${repo.is_active ? 'translate-x-4' : 'translate-x-0'}`} />

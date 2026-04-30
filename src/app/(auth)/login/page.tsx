@@ -47,15 +47,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B1120] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#09090b] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="text-4xl mb-2">👁️</div>
           <h1 className="text-2xl font-bold text-white">Lurk</h1>
-          <p className="text-slate-400 mt-1">Security scanning for AI-generated code</p>
+          <p className="text-zinc-400 mt-1">Security scanning for AI-generated code</p>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-8 space-y-3">
+        <div className="bg-[#18181b] border border-[#27272a] rounded-xl p-8 space-y-3">
           <Button
             onClick={handleGitHub}
             disabled={loading}
@@ -85,10 +85,10 @@ export default function LoginPage() {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-700" />
+              <div className="w-full border-t border-[#27272a]" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-slate-900 px-2 text-slate-400">or</span>
+              <span className="bg-[#18181b] px-2 text-zinc-400">or</span>
             </div>
           </div>
 
@@ -96,12 +96,12 @@ export default function LoginPage() {
             <div className="text-center py-4">
               <div className="text-[#00FF94] text-2xl mb-2">✉️</div>
               <p className="text-white font-medium">Check your email</p>
-              <p className="text-slate-400 text-sm mt-1">We sent a magic link to {email}</p>
+              <p className="text-zinc-400 text-sm mt-1">We sent a magic link to {email}</p>
             </div>
           ) : (
             <form onSubmit={handleMagicLink} className="space-y-4">
               <div>
-                <Label htmlFor="email" className="text-slate-300">Email address</Label>
+                <Label htmlFor="email" className="text-zinc-300">Email address</Label>
                 <Input
                   id="email"
                   type="email"
@@ -109,7 +109,7 @@ export default function LoginPage() {
                   onChange={e => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  className="mt-1 bg-slate-800 border-slate-700 text-white placeholder:text-slate-500"
+                  className="mt-1 bg-[#27272a] border-[#3f3f46] text-white placeholder:text-zinc-500"
                 />
               </div>
               <Button

@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 const TIER_LABELS: Record<string, { label: string; color: string }> = {
-  free:   { label: 'Free',   color: 'bg-slate-700 text-slate-300' },
+  free:   { label: 'Free',   color: 'bg-slate-700 text-zinc-300' },
   pro:    { label: 'Pro',    color: 'bg-[#00FF94]/20 text-[#00FF94]' },
   agency: { label: 'Agency', color: 'bg-purple-500/20 text-purple-300' },
 }
@@ -85,7 +85,7 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold text-white">Profile</h1>
 
       {/* Avatar + identity */}
-      <Card className="bg-slate-900 border-slate-800 p-6">
+      <Card className="bg-[#18181b] border-[#27272a] p-6">
         <div className="flex items-center gap-5">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="avatar" className="w-16 h-16 rounded-full ring-2 ring-[#00FF94]/30 object-cover" />
@@ -96,10 +96,10 @@ export default function ProfilePage() {
           )}
           <div>
             <p className="text-white font-semibold text-lg leading-tight">{profile.full_name ?? 'No name set'}</p>
-            <p className="text-slate-400 text-sm mt-0.5">{profile.email}</p>
+            <p className="text-zinc-400 text-sm mt-0.5">{profile.email}</p>
             <div className="flex items-center gap-2 mt-2">
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tier.color}`}>{tier.label}</span>
-              <span className="text-slate-600 text-xs">Member since {memberSince}</span>
+              <span className="text-zinc-600 text-xs">Member since {memberSince}</span>
             </div>
           </div>
         </div>
@@ -113,16 +113,16 @@ export default function ProfilePage() {
             { label: 'Findings',      value: stats.totalFindings },
             { label: 'Active repos',  value: stats.repos },
           ].map(s => (
-            <Card key={s.label} className="bg-slate-900 border-slate-800 p-4 text-center">
+            <Card key={s.label} className="bg-[#18181b] border-[#27272a] p-4 text-center">
               <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="text-slate-400 text-xs mt-1">{s.label}</p>
+              <p className="text-zinc-400 text-xs mt-1">{s.label}</p>
             </Card>
           ))}
         </div>
       )}
 
       {/* Edit display name */}
-      <Card className="bg-slate-900 border-slate-800 p-6 space-y-4">
+      <Card className="bg-[#18181b] border-[#27272a] p-6 space-y-4">
         <h2 className="text-white font-semibold">Display name</h2>
         <div className="flex gap-3">
           <input
@@ -131,7 +131,7 @@ export default function ProfilePage() {
             onKeyDown={e => e.key === 'Enter' && saveName()}
             placeholder="Your name"
             maxLength={80}
-            className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00FF94] focus:border-[#00FF94]"
+            className="flex-1 bg-[#27272a] border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#00FF94] focus:border-[#00FF94]"
           />
           <Button
             onClick={saveName}
@@ -144,41 +144,41 @@ export default function ProfilePage() {
       </Card>
 
       {/* Account info */}
-      <Card className="bg-slate-900 border-slate-800 p-6 space-y-3">
+      <Card className="bg-[#18181b] border-[#27272a] p-6 space-y-3">
         <h2 className="text-white font-semibold">Account details</h2>
         <div className="space-y-2 text-sm">
-          <div className="flex justify-between py-1.5 border-b border-slate-800">
-            <span className="text-slate-400">Email</span>
+          <div className="flex justify-between py-1.5 border-b border-[#27272a]">
+            <span className="text-zinc-400">Email</span>
             <span className="text-white">{profile.email}</span>
           </div>
-          <div className="flex justify-between py-1.5 border-b border-slate-800">
-            <span className="text-slate-400">Plan</span>
+          <div className="flex justify-between py-1.5 border-b border-[#27272a]">
+            <span className="text-zinc-400">Plan</span>
             <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tier.color}`}>{tier.label}</span>
           </div>
           {profile.referral_code && (
-            <div className="flex justify-between py-1.5 border-b border-slate-800">
-              <span className="text-slate-400">Referral code</span>
+            <div className="flex justify-between py-1.5 border-b border-[#27272a]">
+              <span className="text-zinc-400">Referral code</span>
               <span className="text-white font-mono">{profile.referral_code}</span>
             </div>
           )}
           <div className="flex justify-between py-1.5">
-            <span className="text-slate-400">Member since</span>
+            <span className="text-zinc-400">Member since</span>
             <span className="text-white">{memberSince}</span>
           </div>
         </div>
       </Card>
 
       {/* Sign out */}
-      <Card className="bg-slate-900 border-slate-800 p-6 flex items-center justify-between">
+      <Card className="bg-[#18181b] border-[#27272a] p-6 flex items-center justify-between">
         <div>
           <p className="text-white font-semibold text-sm">Sign out</p>
-          <p className="text-slate-400 text-xs mt-0.5">You will be returned to the home page.</p>
+          <p className="text-zinc-400 text-xs mt-0.5">You will be returned to the home page.</p>
         </div>
         <Button
           onClick={signOut}
           disabled={signingOut}
           variant="outline"
-          className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white text-sm"
+          className="border-zinc-700 text-zinc-300 hover:bg-[#27272a] hover:text-white text-sm"
         >
           {signingOut ? 'Signing out...' : 'Sign out'}
         </Button>
