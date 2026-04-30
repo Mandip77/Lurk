@@ -211,7 +211,7 @@ export default function LandingPage() {
               },
               {
                 name: 'Pro',
-                price: '$29',
+                price: '$15',
                 per: 'per month',
                 desc: 'For developers who ship daily',
                 features: ['Unlimited scans', 'Fix suggestions for all findings', 'Email notifications', 'Priority scan queue', 'API access'],
