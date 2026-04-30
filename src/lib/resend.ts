@@ -4,6 +4,15 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY!)
 }
 
+function esc(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+}
+
 export async function sendScanCompleteEmail({
   to,
   name,
@@ -30,12 +39,12 @@ export async function sendScanCompleteEmail({
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #0B1120;">🛡️ Lurk — Scan Complete</h2>
-        <p>Hi ${name ?? 'there'},</p>
-        <p>Your security scan for <strong>${repoName}</strong> is complete.</p>
+        <p>Hi ${esc(name ?? 'there')},</p>
+        <p>Your security scan for <strong>${esc(repoName)}</strong> is complete.</p>
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
           <tr>
             <td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>PR</strong></td>
-            <td style="padding: 8px; border: 1px solid #e2e8f0;">${prTitle}</td>
+            <td style="padding: 8px; border: 1px solid #e2e8f0;">${esc(prTitle)}</td>
           </tr>
           <tr>
             <td style="padding: 8px; border: 1px solid #e2e8f0;"><strong>Severity Score</strong></td>
@@ -82,7 +91,7 @@ export async function sendWeeklyDigestEmail({
           <h2 style="margin: 0 0 8px 0; color: #00FF94; font-size: 20px;">👁️ Lurk — Weekly Digest</h2>
           <p style="margin: 0 0 24px 0; color: #94a3b8; font-size: 14px;">Week of ${weekOf}</p>
 
-          <p style="color: #e2e8f0; margin: 0 0 24px 0;">Hi ${name ?? 'there'},</p>
+          <p style="color: #e2e8f0; margin: 0 0 24px 0;">Hi ${esc(name ?? 'there')},</p>
 
           <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
             <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Last 7 days</p>
@@ -135,7 +144,7 @@ export async function sendWeeklyDigestEmail({
           ${topScan ? `
           <div style="background: #1e293b; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
             <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em;">Most critical PR</p>
-            <p style="margin: 0 0 4px 0; color: white; font-weight: 500;">${topScan.prTitle}</p>
+            <p style="margin: 0 0 4px 0; color: white; font-weight: 500;">${esc(topScan.prTitle)}</p>
             <p style="margin: 0; color: #64748b; font-size: 12px;">Severity score: <span style="color: ${topScan.severityScore >= 75 ? '#ef4444' : topScan.severityScore >= 50 ? '#f97316' : '#eab308'}; font-weight: bold;">${topScan.severityScore}/100</span></p>
           </div>` : ''}
 

@@ -10,8 +10,9 @@ export async function GET(req: NextRequest) {
   }
 
   const id = req.nextUrl.searchParams.get('id')
-  if (!id) {
-    return NextResponse.json({ error: 'Missing id parameter' }, { status: 400 })
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!id || !UUID_RE.test(id)) {
+    return NextResponse.json({ error: 'Scan not found' }, { status: 404 })
   }
 
   // Fetch scan and verify it belongs to the authenticated user (IDOR protection)

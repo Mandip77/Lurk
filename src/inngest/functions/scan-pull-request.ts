@@ -155,9 +155,11 @@ export const scanPullRequest = inngest.createFunction(
 
       let systemPrompt = SYSTEM_PROMPT
       if (customRules.length > 0) {
+        // Strip newlines and control characters to prevent prompt injection via rule fields
+        const sanitize = (s: string) => s.replace(/[\r\n\t]/g, ' ').replace(/[^\x20-\x7E]/g, '').slice(0, 200)
         const rulesSection = customRules
           .map((r: { name: string; pattern: string; severity: string; description: string | null }) =>
-            `- ${r.name}: ${r.pattern} → severity: ${r.severity}${r.description ? ` — ${r.description}` : ''}`
+            `- ${sanitize(r.name)}: ${sanitize(r.pattern)} → severity: ${r.severity}`
           )
           .join('\n')
         systemPrompt += `\n\nCUSTOM RULES (flag these patterns specifically):\n${rulesSection}`

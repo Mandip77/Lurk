@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -14,18 +17,14 @@ export async function DELETE(
 
   const service = createServiceClient()
 
-  // Verify ownership
-  const { data: key } = await service
+  // Atomic: ownership enforced in the DELETE itself
+  const { error, count } = await service
     .from('api_keys')
-    .select('id')
+    .delete({ count: 'exact' })
     .eq('id', id)
     .eq('user_id', user.id)
-    .single()
 
-  if (!key) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  const { error } = await service.from('api_keys').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: 'Failed to revoke key' }, { status: 500 })
+  if (error || count === 0) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   return NextResponse.json({ ok: true })
 }

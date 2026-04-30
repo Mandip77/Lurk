@@ -4,6 +4,15 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { getInstallationOctokit } from '@/lib/github'
 import { inngest } from '@/inngest/client'
 
+function hmacMatches(body: string, signature: string, secret: string): boolean {
+  const expected = 'sha256=' + createHmac('sha256', secret).update(body).digest('hex')
+  try {
+    return timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+  } catch {
+    return false
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('x-hub-signature-256') ?? ''
@@ -11,6 +20,13 @@ export async function POST(req: NextRequest) {
 
   if (event !== 'pull_request') {
     return NextResponse.json({ ok: true })
+  }
+
+  // Fast pre-filter: validate against global webhook secret before touching the DB.
+  // This prevents unauthenticated requests from probing whether a repo is registered.
+  const globalSecret = process.env.GITHUB_WEBHOOK_SECRET
+  if (globalSecret && !hmacMatches(body, signature, globalSecret)) {
+    return new NextResponse('Unauthorized', { status: 401 })
   }
 
   let payload: Record<string, unknown>
@@ -43,13 +59,8 @@ export async function POST(req: NextRequest) {
 
   if (!repo) return NextResponse.json({ ok: true })
 
-  // Verify HMAC using this repo's per-webhook secret
-  const expected = 'sha256=' + createHmac('sha256', repo.webhook_secret).update(body).digest('hex')
-  try {
-    if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
-      return new NextResponse('Unauthorized', { status: 401 })
-    }
-  } catch {
+  // Verify per-repo HMAC (each repo can have its own webhook secret)
+  if (!hmacMatches(body, signature, repo.webhook_secret)) {
     return new NextResponse('Unauthorized', { status: 401 })
   }
 
@@ -73,27 +84,32 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Quota check — atomic via RPC to avoid race condition
+  // Quota check — uses get_monthly_limit() to respect referral bonus scans
   if (user.tier === 'free') {
     const thisMonth = new Date()
     thisMonth.setDate(1)
     const monthStr = thisMonth.toISOString().split('T')[0]
 
+    const { data: monthlyLimit } = await supabase.rpc('get_monthly_limit', { p_user_id: user.id })
     const { data: quotaResult } = await supabase.rpc('check_quota', {
       p_user_id: user.id,
       p_month: monthStr,
-      p_limit: 3,
+      p_limit: monthlyLimit ?? 3,
     })
 
     if (!quotaResult) {
-      const octokit = await getInstallationOctokit(repo.installation_id)
-      const [owner, repoName] = repoFullName.split('/')
-      await octokit.rest.issues.createComment({
-        owner,
-        repo: repoName,
-        issue_number: pr.number,
-        body: `## 👁️ Lurk\n\nYou've used all 3 free scans this month.\n\n[Upgrade to Pro →](${appUrl}/pricing) for unlimited scanning.`,
-      })
+      try {
+        const octokit = await getInstallationOctokit(repo.installation_id)
+        const [owner, repoName] = repoFullName.split('/')
+        await octokit.rest.issues.createComment({
+          owner,
+          repo: repoName,
+          issue_number: pr.number,
+          body: `## 👁️ Lurk\n\nYou've used all ${monthlyLimit ?? 3} free scans this month.\n\n[Upgrade to Pro →](${appUrl}/pricing) for unlimited scanning.`,
+        })
+      } catch {
+        // Non-fatal
+      }
       return NextResponse.json({ ok: true, reason: 'quota_exceeded' })
     }
   }

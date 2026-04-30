@@ -3,6 +3,8 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/service'
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const SuppressSchema = z.object({
   reason: z.string().max(500).optional(),
 })
@@ -12,6 +14,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -25,21 +29,12 @@ export async function POST(
 
   const parsed = SuppressSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    return NextResponse.json({ error: 'Invalid request' }, { status: 422 })
   }
 
   const service = createServiceClient()
 
-  // Verify ownership
-  const { data: finding } = await service
-    .from('findings')
-    .select('id, user_id')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!finding) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
+  // Atomic: ownership enforced inside the UPDATE itself — no separate SELECT needed
   const { data: updated, error } = await service
     .from('findings')
     .update({
@@ -48,10 +43,11 @@ export async function POST(
       suppressed_at: new Date().toISOString(),
     })
     .eq('id', id)
+    .eq('user_id', user.id)
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: 'Failed to suppress finding' }, { status: 500 })
+  if (error || !updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   return NextResponse.json({ finding: updated })
 }
@@ -61,22 +57,15 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
+  if (!UUID_RE.test(id)) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const service = createServiceClient()
 
-  // Verify ownership
-  const { data: finding } = await service
-    .from('findings')
-    .select('id, user_id')
-    .eq('id', id)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!finding) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
+  // Atomic: ownership enforced inside the UPDATE itself
   const { data: updated, error } = await service
     .from('findings')
     .update({
@@ -85,10 +74,11 @@ export async function DELETE(
       suppressed_at: null,
     })
     .eq('id', id)
+    .eq('user_id', user.id)
     .select()
     .single()
 
-  if (error) return NextResponse.json({ error: 'Failed to unsuppress finding' }, { status: 500 })
+  if (error || !updated) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   return NextResponse.json({ finding: updated })
 }

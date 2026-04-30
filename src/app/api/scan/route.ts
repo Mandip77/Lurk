@@ -5,30 +5,31 @@ import { createServiceClient } from '@/lib/supabase/service'
 import { inngest } from '@/inngest/client'
 
 const ScanRequestSchema = z.object({
-  repository_full_name: z.string().min(1),
-  pr_number: z.number().int().positive(),
-  diff: z.string().optional(),
+  repository_full_name: z.string().min(1).max(200),
+  pr_number: z.number().int().positive().max(999999),
+  diff: z.string().max(500_000).optional(),
 })
 
 async function getApiKeyUser(authHeader: string | null) {
   if (!authHeader?.startsWith('Bearer ')) return null
   const token = authHeader.slice(7)
+  if (!token || token.length < 10) return null
   const keyHash = createHash('sha256').update(token).digest('hex')
 
   const service = createServiceClient()
   const { data: apiKey } = await service
     .from('api_keys')
-    .select('id, user_id, users(tier, id, email)')
+    .select('id, user_id, expires_at, users(tier, id, email)')
     .eq('key_hash', keyHash)
     .single()
 
   if (!apiKey) return null
 
-  // Update last_used_at
-  await service
-    .from('api_keys')
-    .update({ last_used_at: new Date().toISOString() })
-    .eq('id', apiKey.id)
+  // Reject expired keys
+  if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) return null
+
+  // Update last_used_at (fire-and-forget — don't block on it)
+  service.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', apiKey.id)
 
   return apiKey
 }
@@ -52,30 +53,32 @@ export async function POST(req: NextRequest) {
 
   const parsed = ScanRequestSchema.safeParse(body)
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 422 })
+    return NextResponse.json({ error: 'Invalid request' }, { status: 422 })
   }
 
   const { repository_full_name, pr_number, diff: providedDiff } = parsed.data
   const service = createServiceClient()
 
-  // Quota check for free tier
-  if (user.tier === 'free') {
-    const thisMonth = new Date()
-    thisMonth.setDate(1)
-    const monthStr = thisMonth.toISOString().split('T')[0]
+  // Quota check — respects bonus scans from referrals via get_monthly_limit()
+  const thisMonth = new Date()
+  thisMonth.setDate(1)
+  const monthStr = thisMonth.toISOString().split('T')[0]
 
-    const { data: quotaResult } = await service.rpc('check_quota', {
+  const { data: monthlyLimit } = await service.rpc('get_monthly_limit', { p_user_id: user.id })
+  const effectiveLimit = (monthlyLimit as number | null) ?? (user.tier === 'free' ? 3 : 999999)
+
+  if (user.tier === 'free') {
+    const { data: quotaOk } = await service.rpc('check_quota', {
       p_user_id: user.id,
       p_month: monthStr,
-      p_limit: 3,
+      p_limit: effectiveLimit,
     })
-
-    if (!quotaResult) {
+    if (!quotaOk) {
       return NextResponse.json({ error: 'Monthly scan quota exceeded' }, { status: 429 })
     }
   }
 
-  // Find repository
+  // Find repository — scoped to this user
   const { data: repo } = await service
     .from('repositories')
     .select('*')
@@ -86,6 +89,20 @@ export async function POST(req: NextRequest) {
 
   if (!repo) {
     return NextResponse.json({ error: 'Repository not found or not active' }, { status: 404 })
+  }
+
+  // Idempotency: skip if a scan for this PR was created in the last 30 seconds
+  const { data: recentScan } = await service
+    .from('scans')
+    .select('id, created_at')
+    .eq('repository_id', repo.id)
+    .eq('pr_number', pr_number)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (recentScan && Date.now() - new Date(recentScan.created_at).getTime() < 30_000) {
+    return NextResponse.json({ scan_id: recentScan.id, status: 'queued', deduplicated: true })
   }
 
   // Create scan record
@@ -106,7 +123,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create scan' }, { status: 500 })
   }
 
-  // Fire inngest event — pass diff if provided to skip GitHub fetch
   await inngest.send({
     name: 'scan/requested',
     data: {
