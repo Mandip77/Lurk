@@ -121,8 +121,8 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="text-zinc-400 mt-1">Security overview across your repositories</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-white">Dashboard</h1>
+        <p className="text-zinc-400 mt-1 text-sm sm:text-base">Security overview across your repositories</p>
       </div>
 
       {(!hasRepo || !hasActiveRepo || !hasScan) && (
@@ -264,12 +264,12 @@ export default async function DashboardPage() {
             </div>
           ) : (
             scans.map(scan => (
-              <Link key={scan.id} href={`/scans/${scan.id}`} className="flex items-center gap-4 p-4 hover:bg-[#27272a]/50 transition-colors">
+              <Link key={scan.id} href={`/scans/${scan.id}`} className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 hover:bg-[#27272a]/50 transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium truncate">{scan.pr_title ?? 'Unknown PR'}</p>
-                  <p className="text-zinc-400 text-sm">{scan.repositories?.full_name} · {new Date(scan.created_at).toLocaleDateString()}</p>
+                  <p className="text-white font-medium truncate text-sm sm:text-base">{scan.pr_title ?? 'Unknown PR'}</p>
+                  <p className="text-zinc-400 text-xs sm:text-sm truncate">{scan.repositories?.full_name} · {new Date(scan.created_at).toLocaleDateString()}</p>
                 </div>
-                <div className="w-32 shrink-0">
+                <div className="w-24 sm:w-32 shrink-0 hidden sm:block">
                   <ScoreBar score={scan.severity_score} />
                 </div>
                 <StatusBadge status={scan.status} />

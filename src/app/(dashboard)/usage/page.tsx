@@ -167,6 +167,7 @@ export default function UsagePage() {
           {history.length === 0 ? (
             <div className="p-8 text-center text-zinc-500 text-sm">No usage history yet. Run your first scan to see data here.</div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#27272a]">
@@ -199,6 +200,7 @@ export default function UsagePage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

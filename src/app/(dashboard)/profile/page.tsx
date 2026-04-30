@@ -85,8 +85,8 @@ export default function ProfilePage() {
       <h1 className="text-2xl font-bold text-white">Profile</h1>
 
       {/* Avatar + identity */}
-      <Card className="bg-[#18181b] border-[#27272a] p-6">
-        <div className="flex items-center gap-5">
+      <Card className="bg-[#18181b] border-[#27272a] p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt="avatar" className="w-16 h-16 rounded-full ring-2 ring-[#00FF94]/30 object-cover" />
           ) : (
@@ -107,7 +107,7 @@ export default function ProfilePage() {
 
       {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Scans run',     value: stats.totalScans },
             { label: 'Findings',      value: stats.totalFindings },

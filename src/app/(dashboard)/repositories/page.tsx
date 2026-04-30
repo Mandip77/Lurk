@@ -94,12 +94,12 @@ export default function RepositoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-white">Repositories</h1>
-          <p className="text-zinc-400 mt-1">Manage which repositories Lurk scans</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Repositories</h1>
+          <p className="text-zinc-400 mt-1 text-sm sm:text-base">Manage which repositories Lurk scans</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             onClick={syncRepos}
             disabled={syncing}
@@ -162,14 +162,14 @@ export default function RepositoriesPage() {
         <div className="space-y-3">
           <p className="text-zinc-400 text-sm">{repos.length} connected {repos.length === 1 ? 'repository' : 'repositories'} - enable scanning on the repos you want Lurk to watch.</p>
           {repos.map(repo => (
-            <Card key={repo.id} className="bg-[#18181b] border-[#27272a] p-4 flex items-center justify-between">
+            <Card key={repo.id} className="bg-[#18181b] border-[#27272a] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-white font-medium truncate">{repo.full_name}</p>
                 <p className="text-zinc-500 text-xs mt-0.5">
                   {repo.provider} · Added {new Date(repo.created_at).toLocaleDateString()}
                 </p>
               </div>
-              <div className="flex items-center gap-3 shrink-0 ml-4">
+              <div className="flex items-center gap-3 flex-wrap sm:shrink-0 sm:ml-4">
                 <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${repo.is_active ? 'bg-[#00FF94]/10 text-[#00FF94]' : 'bg-[#27272a] text-zinc-500'}`}>
                   {repo.is_active ? 'Scanning' : 'Paused'}
                 </span>

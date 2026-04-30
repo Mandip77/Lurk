@@ -49,7 +49,7 @@ export default function LandingPage() {
 
       {/* NAV */}
       <nav className={`sticky top-0 z-50 border-b transition-all duration-300 ${navScrolled ? 'border-white/10 bg-[#060d1a]/95 backdrop-blur-xl shadow-lg shadow-black/20' : 'border-white/5 bg-[#060d1a]/80 backdrop-blur-md'}`}>
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2.5 group">
             <div className="w-8 h-8 rounded-lg bg-[#00FF94]/10 border border-[#00FF94]/30 flex items-center justify-center text-base transition-all duration-200 group-hover:bg-[#00FF94]/20 group-hover:border-[#00FF94]/50 group-hover:scale-110">
               👁️
@@ -83,7 +83,7 @@ export default function LandingPage() {
       </nav>
 
       {/* HERO */}
-      <section className="relative overflow-hidden pt-28 pb-24 px-6">
+      <section className="relative overflow-hidden pt-20 sm:pt-28 pb-16 sm:pb-24 px-4 sm:px-6">
         <div className="pointer-events-none absolute inset-0 flex items-start justify-center">
           <div className="w-[800px] h-[500px] rounded-full bg-[#00FF94]/5 blur-[130px] -translate-y-1/4 animate-pulse" style={{ animationDuration: '4s' }} />
         </div>
@@ -96,7 +96,7 @@ export default function LandingPage() {
             Now scanning with Claude Haiku - $0.0003 per PR
           </div>
 
-          <h1 className="text-5xl sm:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold leading-[1.1] tracking-tight mb-6">
             Every AI-generated PR,{' '}
             <br className="hidden sm:block" />
             <span className="text-[#00FF94] relative">
@@ -105,7 +105,7 @@ export default function LandingPage() {
             </span>
           </h1>
 
-          <p className={`text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed transition-all duration-700 delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+          <p className={`text-sm sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed transition-all duration-700 delay-100 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             Lurk connects to your GitHub repositories and automatically audits every pull request for security vulnerabilities that AI code assistants commonly introduce - RLS misconfigurations, hardcoded secrets, broken auth, and supply chain risks.
           </p>
 
@@ -122,7 +122,7 @@ export default function LandingPage() {
         </div>
 
         {/* Animated PR comment mockup */}
-        <div className={`relative max-w-2xl mx-auto mt-16 transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
+        <div className={`relative max-w-2xl mx-auto mt-10 sm:mt-16 transition-all duration-700 delay-300 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
           <div className="rounded-2xl border border-white/8 bg-[#0d1626] overflow-hidden shadow-2xl shadow-black/40">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 bg-white/2">
               <div className="w-3 h-3 rounded-full bg-red-500/60" />
@@ -158,13 +158,13 @@ export default function LandingPage() {
         </div>
 
         {/* Stats row */}
-        <div className={`relative max-w-3xl mx-auto mt-16 grid grid-cols-3 gap-6 transition-all duration-700 delay-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+        <div className={`relative max-w-3xl mx-auto mt-12 sm:mt-16 grid grid-cols-3 gap-3 sm:gap-6 transition-all duration-700 delay-500 ${visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {[
             { value: 99, suffix: '%', label: 'Margin at scale' },
             { value: 3, suffix: 's', label: 'Avg scan time' },
             { value: 0.0003, suffix: '/scan', label: 'AI cost per PR', fixed: true },
           ].map((s, i) => (
-            <div key={i} className="text-center p-4 rounded-xl border border-white/5 bg-white/2">
+            <div key={i} className="text-center p-3 sm:p-4 rounded-xl border border-white/5 bg-white/2">
               <p className="text-2xl font-bold text-[#00FF94]">
                 {s.fixed ? `$${s.value}` : <AnimatedCounter target={s.value as number} suffix={s.suffix} />}
               </p>
@@ -175,7 +175,7 @@ export default function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" className="py-24 px-6 border-t border-white/5">
+      <section id="how" className="py-16 sm:py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-[#00FF94] text-sm font-semibold tracking-widest uppercase mb-3">How it works</p>
@@ -201,7 +201,7 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-24 px-6 border-t border-white/5">
+      <section id="features" className="py-16 sm:py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-[#00FF94] text-sm font-semibold tracking-widest uppercase mb-3">What we catch</p>
@@ -226,14 +226,14 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24 px-6 border-t border-white/5">
+      <section id="pricing" className="py-16 sm:py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-[#00FF94] text-sm font-semibold tracking-widest uppercase mb-3">Pricing</p>
             <h2 className="text-3xl sm:text-4xl font-bold">Start free, pay when it saves you</h2>
             <p className="text-slate-400 mt-4">All plans include unlimited repositories. Upgrade for unlimited scans and fix suggestions.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {[
               { name: 'Free', price: '$0', per: 'forever', desc: 'Try it on your next PR', features: ['3 scans per month', 'Core vulnerability detection', 'GitHub PR comments', 'Web report viewer'], cta: 'Start free', href: '/login', highlight: false },
               { name: 'Pro', price: '$15', per: 'per month', desc: 'For developers who ship daily', features: ['Unlimited scans', 'Fix suggestions for all findings', 'Email notifications', 'Priority scan queue', 'API access'], cta: 'Upgrade to Pro', href: '/login', highlight: true },
@@ -274,7 +274,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 px-6 border-t border-white/5">
+      <section className="py-16 sm:py-24 px-4 sm:px-6 border-t border-white/5">
         <div className="max-w-2xl mx-auto text-center">
           <div className="w-14 h-14 rounded-2xl bg-[#00FF94]/10 border border-[#00FF94]/20 flex items-center justify-center text-2xl mx-auto mb-6 hover:scale-110 hover:bg-[#00FF94]/20 transition-all duration-200 cursor-default">
             👁️
@@ -288,7 +288,7 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/5 px-6 py-8">
+      <footer className="border-t border-white/5 px-4 sm:px-6 py-8">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
           <div className="flex items-center gap-2">
             <span>👁️</span>

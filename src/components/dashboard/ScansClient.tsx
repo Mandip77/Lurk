@@ -191,7 +191,7 @@ export function ScansClient({ scans: initialScans }: ScansClientProps) {
           placeholder="Search by PR title or author..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] bg-slate-900 border border-slate-700 text-white placeholder-slate-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00FF94] transition-colors"
+          className="w-full sm:flex-1 sm:min-w-[200px] bg-slate-900 border border-slate-700 text-white placeholder-slate-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#00FF94] transition-colors"
         />
 
         <select
@@ -256,7 +256,7 @@ export function ScansClient({ scans: initialScans }: ScansClientProps) {
       </div>
 
       {/* Table */}
-      <Card className="bg-[#18181b] border-[#27272a]">
+      <Card className="bg-[#18181b] border-[#27272a] overflow-hidden">
         {filtered.length === 0 ? (
           <div className="p-12 text-center">
             <p className="text-slate-500 text-lg mb-2">No results found</p>
@@ -275,69 +275,71 @@ export function ScansClient({ scans: initialScans }: ScansClientProps) {
             )}
           </div>
         ) : (
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-[#27272a] text-left">
-                <th className="p-4 w-10">
-                  <input
-                    type="checkbox"
-                    checked={selected.size === filtered.length && filtered.length > 0}
-                    onChange={toggleSelectAll}
-                    className="rounded border-slate-700 bg-slate-800 accent-[#00FF94]"
-                  />
-                </th>
-                <th className="p-4 text-zinc-400 text-sm font-medium">PR / Repository</th>
-                <th className="p-4 text-zinc-400 text-sm font-medium">Score</th>
-                <th className="p-4 text-zinc-400 text-sm font-medium">Status</th>
-                <th className="p-4 text-zinc-400 text-sm font-medium">Date</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#27272a]">
-              {filtered.map(scan => (
-                <tr
-                  key={scan.id}
-                  className={`hover:bg-[#27272a]/50 transition-colors ${
-                    selected.has(scan.id) ? 'bg-slate-800/30' : ''
-                  }`}
-                >
-                  <td className="p-4">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#27272a] text-left">
+                  <th className="p-3 sm:p-4 w-10">
                     <input
                       type="checkbox"
-                      checked={selected.has(scan.id)}
-                      onChange={() => toggleSelect(scan.id)}
+                      checked={selected.size === filtered.length && filtered.length > 0}
+                      onChange={toggleSelectAll}
                       className="rounded border-slate-700 bg-slate-800 accent-[#00FF94]"
-                      onClick={e => e.stopPropagation()}
                     />
-                  </td>
-                  <td className="p-4">
-                    <Link
-                      href={`/scans/${scan.id}`}
-                      className="hover:text-[#00FF94] transition-colors"
-                    >
-                      <p className="text-white font-medium">
-                        {scan.pr_title ?? `PR #${scan.pr_number}`}
-                      </p>
-                      <p className="text-slate-400 text-sm">
-                        {scan.repositories?.full_name}
-                        {scan.pr_author && (
-                          <span className="text-slate-500"> · by {scan.pr_author}</span>
-                        )}
-                      </p>
-                    </Link>
-                  </td>
-                  <td className="p-4">
-                    <ScoreChip score={scan.severity_score} />
-                  </td>
-                  <td className="p-4">
-                    <StatusBadge status={scan.status} />
-                  </td>
-                  <td className="p-4 text-slate-400 text-sm">
-                    {new Date(scan.created_at).toLocaleDateString()}
-                  </td>
+                  </th>
+                  <th className="p-3 sm:p-4 text-zinc-400 text-sm font-medium">PR / Repository</th>
+                  <th className="p-3 sm:p-4 text-zinc-400 text-sm font-medium hidden sm:table-cell">Score</th>
+                  <th className="p-3 sm:p-4 text-zinc-400 text-sm font-medium">Status</th>
+                  <th className="p-3 sm:p-4 text-zinc-400 text-sm font-medium hidden sm:table-cell">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#27272a]">
+                {filtered.map(scan => (
+                  <tr
+                    key={scan.id}
+                    className={`hover:bg-[#27272a]/50 transition-colors ${
+                      selected.has(scan.id) ? 'bg-slate-800/30' : ''
+                    }`}
+                  >
+                    <td className="p-3 sm:p-4">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(scan.id)}
+                        onChange={() => toggleSelect(scan.id)}
+                        className="rounded border-slate-700 bg-slate-800 accent-[#00FF94]"
+                        onClick={e => e.stopPropagation()}
+                      />
+                    </td>
+                    <td className="p-3 sm:p-4">
+                      <Link
+                        href={`/scans/${scan.id}`}
+                        className="hover:text-[#00FF94] transition-colors"
+                      >
+                        <p className="text-white font-medium truncate max-w-[200px] sm:max-w-none">
+                          {scan.pr_title ?? `PR #${scan.pr_number}`}
+                        </p>
+                        <p className="text-slate-400 text-sm truncate max-w-[200px] sm:max-w-none">
+                          {scan.repositories?.full_name}
+                          {scan.pr_author && (
+                            <span className="text-slate-500"> · by {scan.pr_author}</span>
+                          )}
+                        </p>
+                      </Link>
+                    </td>
+                    <td className="p-3 sm:p-4 hidden sm:table-cell">
+                      <ScoreChip score={scan.severity_score} />
+                    </td>
+                    <td className="p-3 sm:p-4">
+                      <StatusBadge status={scan.status} />
+                    </td>
+                    <td className="p-3 sm:p-4 text-slate-400 text-sm hidden sm:table-cell">
+                      {new Date(scan.created_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
     </div>

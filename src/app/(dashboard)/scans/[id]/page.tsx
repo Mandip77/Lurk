@@ -132,10 +132,10 @@ export default function ScanDetailPage() {
         <Link href="/scans" className="text-slate-400 hover:text-white text-sm">← Back to Scans</Link>
       </div>
 
-      <div className="flex items-start gap-6 flex-wrap">
+      <div className="flex items-start gap-4 sm:gap-6 flex-wrap">
         <ScoreGauge score={scan.severity_score} />
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-bold text-white">{scan.pr_title ?? (scan.pr_number ? `PR #${scan.pr_number}` : 'Codebase Scan')}</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-white">{scan.pr_title ?? (scan.pr_number ? `PR #${scan.pr_number}` : 'Codebase Scan')}</h1>
           <p className="text-zinc-400 mt-1">{scan.repositories?.full_name} {!scan.pr_number && <span className="ml-1 text-xs px-2 py-0.5 rounded-full bg-[#00FF94]/10 text-[#00FF94] font-medium">Full Codebase</span>}</p>
           <div className="flex items-center gap-4 mt-3 text-sm text-slate-400 flex-wrap">
             <span>by {scan.pr_author}</span>
@@ -174,10 +174,10 @@ export default function ScanDetailPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {(['critical', 'high', 'medium', 'low', 'info'] as FindingSeverity[]).map(s => (
-          <Card key={s} className="bg-slate-900 border-slate-800 p-3 text-center">
-            <p className="text-2xl font-bold text-white">{bySeverity[s] ?? 0}</p>
+          <Card key={s} className="bg-slate-900 border-slate-800 p-2 sm:p-3 text-center">
+            <p className="text-xl sm:text-2xl font-bold text-white">{bySeverity[s] ?? 0}</p>
             <SeverityBadge severity={s} />
           </Card>
         ))}
